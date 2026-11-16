@@ -274,7 +274,11 @@ Your site is at `https://wedding-photos.YOUR-SUBDOMAIN.workers.dev`. `YOUR-SUBDO
 
 To change it: Cloudflare dashboard → **Workers & Pages** → on the right side find **Subdomain** (or **Account details → Subdomain**) → **Change**. Something like `alexandsam` gives `https://wedding-photos.alexandsam.workers.dev`. It can take a few minutes to start working.
 
-To change the `wedding-photos` part, edit `name = "wedding-photos"` in `wrangler.toml` (for example `name = "photos"`) and run `npm run deploy` again.
+To change the `wedding-photos` part (for example to `alex-and-sam`), keep it out of git:
+
+1. First rename the existing Worker in the dashboard: **Workers & Pages → wedding-photos → Settings → Name → Edit**. Renaming keeps your secrets; a brand-new name from a deploy would start without them.
+2. Create a file called `.env` in the project folder (it's ignored by git) containing `WORKER_NAME=alex-and-sam`.
+3. Run `npm run deploy`. From now on use `npm run cf -- secret put NAME` instead of `npx wrangler secret put NAME`, so secrets go to the renamed Worker.
 
 ### Option 2: your own domain (looks nicer, costs ~$10/year)
 
