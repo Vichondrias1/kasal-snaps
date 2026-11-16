@@ -24,6 +24,8 @@ const BRAND = {
 const BRAND_MAX = 5 * MiB;
 
 const KEY_RE = /^uploads\/([a-z0-9]{6,12}-[a-z0-9]{10})(\.[a-z0-9]{1,8})?$/;
+const MSG_RE = /^messages\/[a-z0-9]{6,12}-[a-z0-9]{10}\.json$/;
+const MSG_MAX = 1000; // characters per guest message
 
 export default {
   async fetch(request, env) {
@@ -65,6 +67,7 @@ async function route(request, env) {
   if (path === "/api/mpu/complete" && method === "POST") return mpuComplete(request, env);
   if (path === "/api/mpu/abort" && method === "POST") return mpuAbort(request, env);
   if (path === "/api/thumb" && method === "PUT") return thumbUpload(request, env, url);
+  if (path === "/api/message" && method === "POST") return postMessage(request, env);
 
   // ---- admin API -----------------------------------------------------------
   if (path === "/api/admin/login" && method === "POST") return login(request, env, url);
@@ -77,6 +80,8 @@ async function route(request, env) {
     if (path === "/api/admin/file" && method === "GET") return getFile(request, env, url);
     if (path === "/api/admin/file" && method === "DELETE") return deleteFile(env, url);
     if (path === "/api/admin/thumb" && method === "GET") return getThumb(env, url);
+    if (path === "/api/admin/messages" && method === "GET") return listMessages(env);
+    if (path === "/api/admin/message" && method === "DELETE") return deleteMessage(env, url);
     if (path === "/api/admin/delete-all" && method === "POST") return deleteAll(request, env);
     if (path === "/api/admin/header" && method === "PUT") return putHeader(request, env);
     if (path === "/api/admin/header" && method === "DELETE") {
@@ -270,6 +275,9 @@ function newObject(filename, guest, type) {
   };
 }
 
+// Every upload must say who sent it.
+const NAME_MISSING = () => json({ error: "Please enter your name first." }, 400);
+
 function contentLength(request) {
   const n = Number(request.headers.get("Content-Length"));
   return Number.isFinite(n) && n > 0 ? n : 0;
@@ -280,6 +288,7 @@ async function singleUpload(request, env, url) {
   const len = contentLength(request);
   if (!len) return json({ error: "Empty upload." }, 411);
   if (len > SINGLE_MAX) return json({ error: "File too large for a single upload." }, 413);
+  if (!cleanText(url.searchParams.get("guest"), 50)) return NAME_MISSING();
 
   const obj = newObject(url.searchParams.get("name"), url.searchParams.get("guest"), request.headers.get("Content-Type"));
   await env.BUCKET.put(obj.key, request.body, {
@@ -302,6 +311,7 @@ async function mpuCreate(request, env) {
   const body = await readJson(request);
   const size = Number(body.size) || 0;
   if (size > FILE_MAX) return json({ error: "Files can be at most 5 GB." }, 413);
+  if (!cleanText(body.guest, 50)) return NAME_MISSING();
   const obj = newObject(body.name, body.guest, body.type);
   const mpu = await env.BUCKET.createMultipartUpload(obj.key, {
     httpMetadata: obj.httpMetadata,
@@ -552,7 +562,7 @@ async function deleteAll(request, env) {
   const { confirm } = await readJson(request);
   if (confirm !== "DELETE") return json({ error: 'Type DELETE to confirm.' }, 400);
   let deleted = 0;
-  for (const prefix of ["uploads/", "thumbs/"]) {
+  for (const prefix of ["uploads/", "thumbs/", "messages/"]) {
     const objects = await listAll(env, { prefix });
     for (let i = 0; i < objects.length; i += 1000) {
       const keys = objects.slice(i, i + 1000).map((o) => o.key);
@@ -561,6 +571,66 @@ async function deleteAll(request, env) {
     }
   }
   return json({ ok: true, deleted });
+}
+
+// ===========================================================================
+//  Guest messages: one small JSON file per message under messages/.
+// ===========================================================================
+
+// Like cleanText, but keeps line breaks so a note can have paragraphs.
+function cleanMessage(s) {
+  return String(s || "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, MSG_MAX);
+}
+
+async function postMessage(request, env) {
+  if (!(await canUpload(request, env))) return closedResponse(env);
+  const body = await readJson(request);
+  const guest = cleanText(body.guest, 50);
+  if (!guest) return NAME_MISSING();
+  const text = cleanMessage(body.text);
+  if (!text) return json({ error: "Your message is empty." }, 400);
+  const id = newId();
+  const at = new Date().toISOString();
+  await env.BUCKET.put("messages/" + id + ".json", JSON.stringify({ guest, text, at }), {
+    httpMetadata: { contentType: "application/json" },
+  });
+  return json({ ok: true, id });
+}
+
+async function listMessages(env) {
+  const objects = await listAll(env, { prefix: "messages/" });
+  const messages = [];
+  // Read in small batches so a big guestbook doesn't open hundreds of reads at once.
+  for (let i = 0; i < objects.length; i += 25) {
+    const batch = await Promise.all(
+      objects.slice(i, i + 25).map(async (o) => {
+        const obj = await env.BUCKET.get(o.key);
+        if (!obj) return null;
+        try {
+          const m = await obj.json();
+          return { key: o.key, guest: String(m.guest || ""), text: String(m.text || ""), at: m.at || o.uploaded };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    messages.push(...batch.filter(Boolean));
+  }
+  messages.sort((a, b) => (a.at < b.at ? 1 : -1));
+  return json({ messages });
+}
+
+async function deleteMessage(env, url) {
+  const key = url.searchParams.get("key");
+  if (typeof key !== "string" || !MSG_RE.test(key)) return json({ error: "Bad key." }, 400);
+  await env.BUCKET.delete(key);
+  return json({ ok: true });
 }
 
 async function putHeader(request, env) {

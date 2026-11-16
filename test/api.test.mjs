@@ -134,6 +134,41 @@ await test(`guest thumbnail upload is ${open ? "allowed" : "blocked (403)"} by t
   eq(r.status, open ? 404 : 403); // open → passes window check, then 404 because the original doesn't exist
 });
 
+// ---------------------------------------------------------------- name required
+await test("uploads without a name are refused", async () => {
+  const a = await req("/api/upload?name=a.jpg&guest=%20%20", { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: small }, cookie);
+  eq(a.status, 400, "single, blank name");
+  const b = await req("/api/upload?name=a.jpg", { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: small }, cookie);
+  eq(b.status, 400, "single, no name");
+  const c = await req("/api/mpu/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "v.mp4", type: "video/mp4", size: 100 * MiB }) }, cookie);
+  eq(c.status, 400, "multipart, no name");
+});
+
+// ---------------------------------------------------------------- messages
+await test(`guest message is ${open ? "allowed" : "blocked (403)"} by the window`, async () => {
+  const r = await req("/api/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ guest: "Tita", text: "Congrats!" }) });
+  eq(r.status, open ? 200 : 403);
+});
+await test("messages: name and text required, admin-only list, delete", async () => {
+  const post = (body) => req("/api/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }, cookie);
+  eq((await post({ text: "hi" })).status, 400, "no name");
+  eq((await post({ guest: "Lola", text: "  \n " })).status, 400, "empty text");
+  await req("/api/admin/delete-all", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: "DELETE" }) }, cookie);
+  const text = "Mabuhay ang bagong kasal! 💜\n\nLove,\n" + "x".repeat(2000);
+  eq((await post({ guest: "José Ñ.", text })).status, 200, "post");
+  eq((await req("/api/admin/messages")).status, 401, "anonymous list");
+  const { messages } = await (await req("/api/admin/messages", {}, cookie)).json();
+  eq(messages.length, 1, "count");
+  eq(messages[0].guest, "José Ñ.", "guest");
+  ok(messages[0].text.startsWith("Mabuhay ang bagong kasal! 💜\n\nLove,\nxx"), "keeps line breaks and emoji");
+  eq(messages[0].text.length, 1000, "trimmed to 1000 chars");
+  const files = await (await req("/api/admin/files", {}, cookie)).json();
+  eq(files.files.length, 0, "messages are not listed as uploads");
+  eq((await req("/api/admin/message?key=uploads/abcdefgh-0123456789.jpg", { method: "DELETE" }, cookie)).status, 400, "only message keys");
+  eq((await req("/api/admin/message?key=" + encodeURIComponent(messages[0].key), { method: "DELETE" }, cookie)).status, 200, "delete");
+  eq((await (await req("/api/admin/messages", {}, cookie)).json()).messages.length, 0, "gone");
+});
+
 // From here on upload as admin so the tests work whether or not the window is open.
 await req("/api/admin/delete-all", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: "DELETE" }) }, cookie);
 
@@ -220,7 +255,7 @@ await test("multipart upload (3 × 25 MiB parts) reassembles exactly", async () 
   mpuKey = key;
 });
 await test("multipart abort works and bad requests are refused", async () => {
-  const c = await req("/api/mpu/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "x.mp4", type: "video/mp4", size: 200 * MiB }) }, cookie);
+  const c = await req("/api/mpu/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "x.mp4", type: "video/mp4", size: 200 * MiB, guest: "Abort Test" }) }, cookie);
   const { key, uploadId } = await c.json();
   eq((await req("/api/mpu/abort", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, uploadId }) }, cookie)).status, 200, "abort");
   const bad = new URLSearchParams({ key: "site/header", uploadId, part: 1 });

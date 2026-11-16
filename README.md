@@ -4,8 +4,8 @@ A private website where your guests upload the photos and videos they take at yo
 
 It runs on your own free Cloudflare account, so there's no subscription and nobody else has your photos.
 
-- **Guests** scan a QR code on the table → type their name (optional) → pick photos & videos → done. Big videos (up to 5 GB each) are fine.
-- **You** get an admin page with a gallery, a video player, a per-guest filter, a storage meter, and a **Download all** button that saves everything as one zip.
+- **Guests** scan a QR code on the table → type their name (required, so you know who sent what) → pick photos & videos → done. Big videos (up to 5 GB each) are fine. They can also leave you a written message.
+- **You** get an admin page with a gallery, a video player, a per-guest filter, a storage meter, guest messages (with a "save as text file" button), and a **Download all** button that saves everything as one zip.
 - **Printable QR table cards** (4×6 inches) are built in.
 
 > This guide is written for people who have never deployed a website. Follow it top to bottom; it takes about 45 minutes. Do it **at least two weeks before the wedding** so you have time to test.
@@ -391,7 +391,7 @@ For very large collections (50 GB+), the free tool [rclone](https://rclone.org/s
 
 ## 16. How it works (for the curious)
 
-- **One Cloudflare Worker** (`src/index.js`) serves the pages and a small API. **One R2 bucket** stores the files. There's no database: each file's guest name and original filename are saved as R2 metadata.
+- **One Cloudflare Worker** (`src/index.js`) serves the pages and a small API. **One R2 bucket** stores the files. There's no database: each file's guest name and original filename are saved as R2 metadata, and each guest message is a small JSON file under `messages/` (up to 1,000 characters).
 - **Uploads go at original quality.** Files up to 90 MB are sent in one request and streamed straight into R2. Bigger files (up to 5 GB) are split into 25 MB pieces with R2 multipart upload, because Workers accept at most 100 MB per request. Each phone uploads 3 files at a time, retries on its own, and resumes big files from the last piece that worked.
 - **Thumbnails are made on the guest's phone** (a ~480 px JPEG, or a frame from a video) and saved to `thumbs/<id>.jpg`. The free Worker plan gives only ~10 ms of CPU per request, so the server never processes images.
 - **Download all** fetches every file in your browser and builds the zip there, streaming it straight to disk.

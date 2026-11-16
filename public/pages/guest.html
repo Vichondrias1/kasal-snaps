@@ -21,6 +21,8 @@
   #uploader label { font-family: var(--display); font-size: 18px; color: var(--text); margin-bottom: 0; }
   #uploader input[type="text"] { border: 0; border-bottom: 1px solid color-mix(in srgb, var(--text) 35%, var(--bg)); border-radius: 0; background: transparent; padding: 0 2px; min-height: 44px; }
   #uploader input[type="text"]:focus-visible { outline: 0; border-bottom: 2px solid var(--primary); }
+  #uploader input[aria-invalid="true"] { border-bottom-color: var(--danger); }
+  .name-hint { margin: 8px 0 0; font-size: 14px; color: var(--danger); }
   #uploader input::placeholder { color: color-mix(in srgb, var(--text) 40%, var(--bg)); }
   .pick { width: 100%; min-height: 60px; font-size: 21px; margin-top: 26px; }
   .hint { font-family: var(--display); font-style: italic; font-size: 17px; color: var(--muted); margin: 12px 0 0; text-align: center; }
@@ -43,6 +45,15 @@
   .print { position: absolute; left: 50%; top: 18px; width: 92px; height: 106px; margin-left: -46px; padding: 6px 6px 20px; background: #fff; border: 1px solid var(--line); box-shadow: 0 2px 6px color-mix(in srgb, var(--text) 12%, transparent); }
   .print i { display: block; width: 100%; height: 100%; background: var(--soft) center/cover no-repeat; }
   .thanks { text-align: center; padding: 14px 0 4px; font-family: var(--display); font-style: italic; font-size: 26px; color: var(--primary); }
+  /* Guestbook note, written on a ruled line like a card. */
+  #note label { font-family: var(--display); font-size: 18px; color: var(--text); }
+  #note textarea { width: 100%; resize: vertical; min-height: 110px; border: 1px solid color-mix(in srgb, var(--text) 25%, var(--bg)); border-radius: 3px; background: var(--card); padding: 10px 12px; font: 400 16px/1.5 var(--body); color: var(--text); }
+  #note textarea:focus-visible { outline: 0; border-color: var(--primary); }
+  #note textarea::placeholder { color: color-mix(in srgb, var(--text) 40%, var(--bg)); font-style: italic; }
+  .note-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+  .note-err { font-size: 14px; color: var(--danger); }
+  .note-sent { text-align: center; font-family: var(--display); font-style: italic; font-size: 22px; color: var(--primary); margin: 0; }
+  .linkish { border: 0; background: none; padding: 0; font: inherit; font-size: 16px; font-style: normal; color: var(--muted); text-decoration: underline; cursor: pointer; }
   .countdown { display: flex; justify-content: center; gap: 10px; margin: 24px auto 18px; }
   .countdown > div { display: flex; flex-direction: column; align-items: center; }
   /* Flip-clock tile: two halves of a card, split by a hairline. */
@@ -82,7 +93,7 @@
     .motion .hero .meta { animation-delay: var(--t1); }
     .motion .hero .rule { animation: draw .7s ease-out both; animation-delay: var(--t2); }
     .motion .hero .welcome { animation-delay: var(--t3); }
-    .motion #uploader, .motion #closed { animation: rise .6s ease-out both; animation-delay: var(--t3); }
+    .motion #uploader, .motion #closed, .motion #note { animation: rise .6s ease-out both; animation-delay: var(--t3); }
     #queue.busy .item:not(.done):not(.error) .bar > i, #queue.busy #totalBar {
       background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .5) 50%, transparent 70%);
       background-size: 200% 100%;
@@ -120,7 +131,8 @@
 
   <section class="card" id="uploader" hidden>
     <label for="guestName">Your name</label>
-    <input type="text" id="guestName" autocomplete="name" maxlength="50" placeholder="Optional, so we know who took them">
+    <input type="text" id="guestName" autocomplete="name" maxlength="50" required aria-describedby="nameHint" placeholder="So we know who took them">
+    <p class="name-hint" id="nameHint" hidden>Please add your name first.</p>
     <input type="file" id="files" accept="image/*,video/*" multiple hidden>
     <button class="btn pick" id="pickBtn" type="button">Add your photos</button>
     <p class="hint">Videos too. Nothing gets compressed.</p>
@@ -135,6 +147,18 @@
     <div class="pile" id="pile" aria-hidden="true" hidden></div>
     <div class="thanks" id="thanks" hidden>Got them. Thank you.</div>
     <ul class="list" id="list"></ul>
+  </section>
+
+  <section class="card" id="note" hidden>
+    <form id="noteForm" novalidate>
+      <label for="noteText">Leave us a message</label>
+      <textarea id="noteText" rows="4" maxlength="1000" placeholder="A wish, a memory, some advice…"></textarea>
+      <div class="note-foot">
+        <span class="note-err" id="noteErr" role="alert"></span>
+        <button class="btn small" id="noteBtn" type="submit">Send message</button>
+      </div>
+    </form>
+    <p class="note-sent" id="noteSent" hidden>Thank you for the note. <button class="linkish" id="noteAgain" type="button">Write another</button></p>
   </section>
 </main>
 
@@ -257,6 +281,7 @@ async function refreshStatus() {
   try { s = await (await fetch("/api/status", { cache: "no-store" })).json(); } catch {}
   const canUpload = s.open || s.isAdmin;
   $("uploader").hidden = !canUpload;
+  $("note").hidden = !canUpload;
   $("closed").hidden = canUpload;
   $("adminNote").hidden = !(s.isAdmin && !s.open);
   if (!canUpload) {
@@ -328,9 +353,62 @@ $("guestName").addEventListener("change", () => {
 const items = [];
 let running = 0;
 
-$("pickBtn").addEventListener("click", () => $("files").click());
+// The name is required for photos and messages alike.
+function needName() {
+  const input = $("guestName");
+  if (input.value.trim()) return false;
+  $("nameHint").hidden = false;
+  input.setAttribute("aria-invalid", "true");
+  input.scrollIntoView({ block: "center", behavior: calm ? "auto" : "smooth" });
+  input.focus({ preventScroll: true });
+  return true;
+}
+$("pickBtn").addEventListener("click", () => {
+  if (!needName()) $("files").click();
+});
+
+// ---------- message ----------
+$("noteForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = $("noteText").value.trim();
+  $("noteErr").textContent = "";
+  if (needName()) return;
+  if (!text) { $("noteErr").textContent = "Write something first."; $("noteText").focus(); return; }
+  const guest = $("guestName").value.trim();
+  try { localStorage.setItem(NAME_KEY, guest); } catch {}
+  $("noteBtn").disabled = true;
+  $("noteBtn").textContent = "Sending…";
+  try {
+    const r = await fetch("/api/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guest, text }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || "Couldn't send it.");
+    $("noteText").value = "";
+    $("noteForm").hidden = true;
+    $("noteSent").hidden = false;
+  } catch (err) {
+    $("noteErr").textContent = (err && err.message && err.message !== "Failed to fetch") ? err.message : "Weak signal. Try again.";
+  } finally {
+    $("noteBtn").disabled = false;
+    $("noteBtn").textContent = "Send message";
+  }
+});
+$("noteAgain").addEventListener("click", () => {
+  $("noteSent").hidden = true;
+  $("noteForm").hidden = false;
+  $("noteText").focus();
+});
+$("guestName").addEventListener("input", () => {
+  if (!$("guestName").value.trim()) return;
+  $("nameHint").hidden = true;
+  $("guestName").removeAttribute("aria-invalid");
+});
 $("files").addEventListener("change", (e) => {
   const guest = $("guestName").value.trim();
+  if (!guest) { e.target.value = ""; needName(); return; }
   try { localStorage.setItem(NAME_KEY, guest); } catch {}
   for (const file of e.target.files) addItem(file, guest);
   e.target.value = "";
