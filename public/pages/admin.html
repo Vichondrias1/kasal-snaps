@@ -40,11 +40,15 @@
   .tile .badge { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 999px; }
   .tile .who { position: absolute; left: 0; right: 0; top: 0; padding: 4px 7px; font-size: 11px; color: #fff; background: linear-gradient(rgba(0,0,0,.55), transparent); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .empty { text-align: center; color: var(--muted); padding: 60px 0; }
-  .stat-link { color: inherit; text-decoration: none; }
+  .stat-link { color: inherit; text-align: left; font: inherit; cursor: pointer; }
   .stat-link:hover { border-color: var(--primary); }
-  .messages { margin-top: 36px; scroll-margin-top: 16px; }
-  .msg-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  .msg-head h2 { font-size: 30px; }
+  .tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); margin: 6px 0 14px; }
+  .tab { border: 0; background: none; padding: 10px 0 9px; margin-bottom: -1px; border-bottom: 2px solid transparent; font: 400 21px/1 var(--display); color: var(--muted); cursor: pointer; }
+  .tab span { font-size: 15px; color: var(--muted); }
+  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--primary); }
+  .tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .msg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 14px; min-height: 36px; }
+  .msg-head .count { color: var(--muted); font-size: 14px; }
   .msg-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
   .msg { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px 12px; display: flex; flex-direction: column; }
   .msg p { margin: 0 0 14px; font-family: var(--display); font-size: 19px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; flex: 1; }
@@ -113,7 +117,7 @@
       </div>
       <div class="stat"><div class="n" id="fileN">—</div><div class="l" id="fileL">files</div></div>
       <div class="stat"><div class="n" id="guestN">—</div><div class="l">guests</div></div>
-      <a class="stat stat-link" href="#messages"><div class="n" id="msgN">—</div><div class="l">messages</div></a>
+      <button class="stat stat-link" id="msgStat" type="button"><div class="n" id="msgN">—</div><div class="l">messages · view</div></button>
     </div>
 
     <div class="panel" id="fallbackPanel" hidden>
@@ -122,6 +126,12 @@
       <div class="guestzips" id="guestZips"></div>
     </div>
 
+    <div class="tabs" role="tablist" aria-label="What to show">
+      <button class="tab" id="tabPhotos" role="tab" type="button" aria-selected="true" aria-controls="photosView">Photos &amp; videos <span id="tabPhotosN"></span></button>
+      <button class="tab" id="tabMsgs" role="tab" type="button" aria-selected="false" aria-controls="messages">Messages <span id="tabMsgN"></span></button>
+    </div>
+
+    <div id="photosView" role="tabpanel" aria-labelledby="tabPhotos">
     <div class="toolbar">
       <select id="guestFilter" aria-label="Filter by guest"></select>
       <select id="typeFilter" aria-label="Filter by type">
@@ -133,10 +143,11 @@
     </div>
     <div class="grid" id="grid"></div>
     <div class="empty" id="empty" hidden>No uploads yet.</div>
+    </div>
 
-    <section class="messages" id="messages">
+    <section class="messages" id="messages" role="tabpanel" aria-labelledby="tabMsgs" hidden>
       <div class="msg-head">
-        <h2>Messages</h2>
+        <span class="count" id="msgInfo"></span>
         <button class="btn small ghost" id="msgSave" type="button" hidden>Save as text file</button>
       </div>
       <div class="msg-list" id="msgList"></div>
@@ -279,6 +290,7 @@ async function load() {
   $("storageStat").classList.toggle("warn", pct >= 0.8 && pct < 1);
   $("storageStat").classList.toggle("over", pct >= 1);
   $("fileN").textContent = s.fileCount;
+  $("tabPhotosN").textContent = `(${s.fileCount})`;
   $("fileL").textContent = `files · ${s.photos} photos, ${s.videos} videos`;
   $("guestN").textContent = s.guestCount;
   $("windowInfo").textContent = `Guest uploads open ${fmt(W.uploadOpens, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} – ${fmt(W.uploadCloses, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} (${W.timezone})`;
@@ -301,12 +313,36 @@ async function load() {
   loadMessages();
 }
 
+// ---------- tabs ----------
+// The tab is kept in the address (#messages) so a refresh stays on it.
+function showTab(name) {
+  const msgs = name === "messages";
+  $("photosView").hidden = msgs;
+  $("messages").hidden = !msgs;
+  $("tabPhotos").setAttribute("aria-selected", String(!msgs));
+  $("tabMsgs").setAttribute("aria-selected", String(msgs));
+  history.replaceState(null, "", msgs ? "#messages" : location.pathname + location.search);
+}
+$("tabPhotos").onclick = () => showTab("photos");
+$("tabMsgs").onclick = () => showTab("messages");
+$("msgStat").onclick = () => { showTab("messages"); $("tabMsgs").scrollIntoView({ block: "start", behavior: "smooth" }); };
+document.querySelector(".tabs").addEventListener("keydown", (e) => {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const next = document.activeElement === $("tabPhotos") ? $("tabMsgs") : $("tabPhotos");
+  next.focus();
+  next.click();
+});
+if (location.hash === "#messages") showTab("messages");
+
 // ---------- messages ----------
 let messages = [];
 async function loadMessages() {
   try { messages = (await api("/api/admin/messages")).messages; }
   catch (e) { toast(e.message); return; }
   $("msgN").textContent = messages.length;
+  $("tabMsgN").textContent = `(${messages.length})`;
+  const writers = new Set(messages.map((m) => m.guest)).size;
+  $("msgInfo").textContent = messages.length ? `${messages.length} ${messages.length === 1 ? "message" : "messages"} from ${writers} ${writers === 1 ? "guest" : "guests"}, newest first` : "";
   $("msgEmpty").hidden = messages.length > 0;
   $("msgSave").hidden = messages.length === 0;
   const list = $("msgList");
