@@ -56,6 +56,14 @@
   .msg footer b { color: var(--text); font-weight: 600; }
   .msg .del { border: 0; background: none; color: var(--danger); font: 500 13px var(--body); cursor: pointer; padding: 4px 0; }
   .messages .empty { padding: 30px 0; }
+  .pol-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin: 6px 0 14px; }
+  .pol-list:empty { display: none; }
+  .pol { background: #fffdf9; padding: 7px 7px 8px; box-shadow: 0 1px 2px rgba(0,0,0,.15), 0 4px 10px rgba(0,0,0,.08); display: grid; gap: 6px; }
+  .pol img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--soft); }
+  .pol input { min-height: 34px; font-size: 14px; padding: 0 8px; }
+  .pol .row { display: flex; justify-content: flex-end; }
+  .pol .row button { border: 0; background: none; padding: 2px 0; font: 500 13px var(--body); cursor: pointer; color: var(--danger); }
+  .count { color: var(--muted); font-size: 14px; align-self: center; }
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
   .panel h2 { font-size: 24px; margin-bottom: 8px; }
   .panel p { margin: 4px 0 10px; font-size: 14px; color: var(--muted); }
@@ -156,6 +164,16 @@
 
     <details class="settings">
       <summary>Settings &amp; clean-up</summary>
+      <div class="panel">
+        <h2>Our photos (polaroids)</h2>
+        <p>Up to 12 photos of the two of you, shown as polaroids at the bottom of the guest page. Each one is shown as a square, cropped to the middle. Captions are optional and appear on the white strip.</p>
+        <div class="pol-list" id="polList"></div>
+        <input type="file" id="polFile" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden>
+        <div class="actions">
+          <button class="btn small" id="polBtn" type="button">Add photos</button>
+          <span class="count" id="polInfo"></span>
+        </div>
+      </div>
       <div class="panel">
         <h2>Header photo</h2>
         <p id="headerInfo">Shown at the top of the guest page.</p>
@@ -698,6 +716,82 @@ async function makeIco(img, sizes) {
   });
   return new Blob([buf], { type: "image/x-icon" });
 }
+// ---------- our photos (polaroids) ----------
+const POL_MAX = 12;
+let pols = (W.polaroids || []).map((p) => ({ ...p, key: "site/polaroids/" + p.src.split("/")[2].split("?")[0] }));
+function renderPols() {
+  const list = $("polList");
+  list.innerHTML = "";
+  pols.forEach((p) => {
+    const card = document.createElement("div");
+    card.className = "pol";
+    const img = document.createElement("img");
+    img.src = p.src; img.alt = ""; img.loading = "lazy";
+    const cap = document.createElement("input");
+    cap.type = "text"; cap.maxLength = 60; cap.placeholder = "Caption (optional)"; cap.value = p.caption || "";
+    cap.setAttribute("aria-label", "Caption");
+    cap.onchange = async () => {
+      try {
+        await api("/api/admin/polaroid?key=" + encodeURIComponent(p.key), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ caption: cap.value }) });
+        p.caption = cap.value.trim();
+        toast("Caption saved.");
+      } catch (err) { toast(err.message); }
+    };
+    const row = document.createElement("div");
+    row.className = "row";
+    const del = document.createElement("button");
+    del.type = "button"; del.textContent = "Remove";
+    del.onclick = async () => {
+      if (!confirm("Remove this photo from the guest page?")) return;
+      try {
+        await api("/api/admin/polaroid?key=" + encodeURIComponent(p.key), { method: "DELETE" });
+        pols = pols.filter((x) => x !== p);
+        renderPols();
+      } catch (err) { toast(err.message); }
+    };
+    row.append(del);
+    card.append(img, cap, row);
+    list.append(card);
+  });
+  $("polInfo").textContent = pols.length ? `${pols.length} of ${POL_MAX}` : "";
+  $("polBtn").disabled = pols.length >= POL_MAX;
+}
+// Photos are shrunk in the browser (long edge 1600 px, JPEG) so they load fast on guests' phones.
+async function shrinkPhoto(file) {
+  const img = await createImageBitmap(file);
+  const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  const g = c.getContext("2d");
+  g.imageSmoothingQuality = "high";
+  g.drawImage(img, 0, 0, c.width, c.height);
+  return toBlob(c, "image/jpeg", 0.86);
+}
+$("polBtn").onclick = () => $("polFile").click();
+$("polFile").onchange = async (e) => {
+  const chosen = [...e.target.files];
+  e.target.value = "";
+  const room = POL_MAX - pols.length;
+  if (chosen.length > room) toast(`Only ${room} more fit, so the first ${room} were added.`);
+  let added = 0;
+  for (const file of chosen.slice(0, room)) {
+    $("polInfo").textContent = `Adding ${added + 1} of ${Math.min(chosen.length, room)}…`;
+    try {
+      const blob = await shrinkPhoto(file);
+      const r = await api("/api/admin/polaroid", { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: blob });
+      pols.push({ key: r.key, src: "/polaroid/" + r.key.split("/").pop() + "?v=" + Date.now(), caption: "" });
+      added++;
+    } catch (err) {
+      toast(/decode|source image|InvalidState|EncodingError/i.test(String(err && (err.name + err.message)))
+        ? `Couldn't open ${file.name}. iPhone HEIC photos only open in Safari; try saving it as a JPEG first.`
+        : (err.message || "Upload failed."));
+    }
+  }
+  renderPols();
+  if (added) toast(`${added} photo${added === 1 ? "" : "s"} added. Add captions below them if you like.`);
+};
+renderPols();
+
 $("brandBtn").onclick = () => $("brandFile").click();
 $("brandFile").onchange = async (e) => {
   const file = e.target.files[0];

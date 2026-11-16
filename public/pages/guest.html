@@ -54,6 +54,16 @@
   .note-err { font-size: 14px; color: var(--danger); }
   .note-sent { text-align: center; font-family: var(--display); font-style: italic; font-size: 22px; color: var(--primary); margin: 0; }
   .linkish { border: 0; background: none; padding: 0; font: inherit; font-size: 16px; font-style: normal; color: var(--muted); text-decoration: underline; cursor: pointer; }
+  /* The couple's photos as polaroids: white frame, deep bottom edge, a strip of tape. */
+  .polaroids h2 { text-align: center; font-size: 34px; margin: 0 0 26px; }
+  .snaps { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 18px; padding: 4px 4px 12px; }
+  .snap { position: relative; margin: 0; padding: 9px 9px 0; background: #fffdf9; border: 0; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 18%, transparent), 0 8px 18px color-mix(in srgb, var(--text) 12%, transparent); transform: rotate(var(--r, 0deg)); transition: transform .35s cubic-bezier(.2, .8, .3, 1), box-shadow .35s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .snap:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 9px); }
+  .snap img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--soft); filter: saturate(.92) contrast(1.02); }
+  .snap figcaption { min-height: 46px; display: flex; align-items: center; justify-content: center; padding: 6px 4px 8px; font-family: var(--display); font-style: italic; font-size: 17px; line-height: 1.15; text-align: center; color: color-mix(in srgb, var(--text) 80%, #fffdf9); }
+  .snap::before { content: ""; position: absolute; top: -9px; left: 50%; width: 64px; height: 20px; margin-left: -32px; background: color-mix(in srgb, var(--primary) 30%, transparent); transform: rotate(calc(var(--r, 0deg) * -1.5)); opacity: .8; }
+  .snap.up { transform: rotate(0) scale(1.06); z-index: 5; box-shadow: 0 2px 4px color-mix(in srgb, var(--text) 18%, transparent), 0 18px 34px color-mix(in srgb, var(--text) 20%, transparent); }
+  .snap:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
   .countdown { display: flex; justify-content: center; gap: 10px; margin: 24px auto 18px; }
   .countdown > div { display: flex; flex-direction: column; align-items: center; }
   /* Flip-clock tile: two halves of a card, split by a hairline. */
@@ -101,6 +111,8 @@
     }
     .item { animation: rise .35s ease-out both; }
     .thanks:not([hidden]) { animation: rise .6s ease-out both; }
+    .motion .snap.wait { opacity: 0; transform: translateY(26px) rotate(calc(var(--r, 0deg) * 3)); }
+    .motion .snap.in { transition: transform .8s cubic-bezier(.2, .8, .3, 1), opacity .5s ease-out, box-shadow .35s; transition-delay: var(--d, 0s); }
   }
   .admin-note { text-align: center; font-size: 13px; color: var(--muted); border: 1px dashed var(--line); padding: 8px 12px; margin-top: 20px; }
 </style>
@@ -159,6 +171,11 @@
       </div>
     </form>
     <p class="note-sent" id="noteSent" hidden>Thank you for the note. <button class="linkish" id="noteAgain" type="button">Write another</button></p>
+  </section>
+
+  <section class="card polaroids" id="polaroids" hidden>
+    <h2>Us, so far</h2>
+    <div class="snaps" id="snaps"></div>
   </section>
 </main>
 
@@ -265,6 +282,53 @@ function addPrint(it) {
     ], { duration: 900, easing: "cubic-bezier(.2, .8, .3, 1)" });
   }
 }
+
+// ---------- polaroids ----------
+// Each print gets its own slight tilt; tapping one straightens and lifts it.
+function renderPolaroids() {
+  const list = Array.isArray(W.polaroids) ? W.polaroids : [];
+  if (!list.length) return;
+  const tilts = [-3.2, 2.4, 1.6, -2.2, -1.4, 3, 2.1, -2.7, -1.8, 2.6, 1.2, -3];
+  const wrap = $("snaps");
+  list.forEach((p, i) => {
+    const fig = document.createElement("figure");
+    fig.className = "snap";
+    fig.tabIndex = 0;
+    fig.style.setProperty("--r", tilts[i % tilts.length] + "deg");
+    fig.style.setProperty("--d", (i % 2) * 0.12 + "s");
+    const img = document.createElement("img");
+    img.src = p.src;
+    img.alt = p.caption || "A photo of the two of us";
+    img.loading = "lazy";
+    img.decoding = "async";
+    const cap = document.createElement("figcaption");
+    cap.textContent = p.caption || "";
+    fig.append(img, cap);
+    const lift = () => {
+      const was = fig.classList.contains("up");
+      wrap.querySelectorAll(".snap.up").forEach((s) => s.classList.remove("up"));
+      if (!was) fig.classList.add("up");
+    };
+    fig.addEventListener("click", lift);
+    fig.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); lift(); } });
+    wrap.append(fig);
+  });
+  $("polaroids").hidden = false;
+  if (calm || !("IntersectionObserver" in window)) return;
+  // Prints settle onto the page as they scroll into view.
+  const prints = [...wrap.children];
+  prints.forEach((f) => f.classList.add("wait", "in"));
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      io.unobserve(e.target);
+      e.target.classList.remove("wait");
+      setTimeout(() => e.target.classList.remove("in"), 1100);
+    }
+  }, { rootMargin: "0px 0px -12% 0px" });
+  prints.forEach((f) => io.observe(f));
+}
+renderPolaroids();
 
 // ---------- upload window ----------
 function fmtDate(iso, withTime) {

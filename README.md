@@ -178,6 +178,8 @@ All your details live in **one file**: `src/config.js`. Open it in any text edit
 
 **Monogram & browser icon:** on the admin page open **Settings & clean-up → Monogram & browser icon** and upload your monogram or logo (a PNG with a transparent background looks best). It appears above your names on the guest page, the admin login and the QR card, and the site makes the browser-tab icon (`favicon.ico`) and phone home-screen icon from it automatically. Like the header photo, it's stored in your R2 bucket, not in GitHub.
 
+**Your photos as polaroids:** under **Settings & clean-up → Our photos (polaroids)** add up to 12 photos of the two of you, with an optional caption on each. They appear at the bottom of the guest page as tilted polaroids, cropped square from the middle. The admin page shrinks them before uploading, and like the monogram they live in your R2 bucket, not in GitHub.
+
 Keep the quote marks and commas exactly as they are. Save the file.
 
 ### Option A: private repo (simplest)

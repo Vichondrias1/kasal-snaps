@@ -330,6 +330,39 @@ await test("monogram, favicon and touch icon upload are admin-only, served and l
 });
 
 // ---------------------------------------------------------------- delete
+await test("polaroids: admin-only upload, shown on the guest page, captions, limit, delete", async () => {
+  const jpg = randomBytes(5000);
+  const put = (q, c, type = "image/jpeg", body = jpg) => req("/api/admin/polaroid" + q, { method: "PUT", headers: { "Content-Type": type }, body }, c);
+  eq((await put("", "")).status, 401, "anonymous");
+  eq((await put("", cookie, "image/svg+xml")).status, 415, "svg refused");
+  eq((await put("", cookie, "image/jpeg", randomBytes(5 * MiB))).status, 413, "too big");
+  const r = await put("?caption=" + encodeURIComponent("Alona Beach 🌴"), cookie);
+  eq(r.status, 200, "upload");
+  const { key } = await r.json();
+  const id = key.split("/").pop();
+  const served = await req("/polaroid/" + id);
+  eq(served.status, 200, "public file");
+  eq(sha(Buffer.from(await served.arrayBuffer())), sha(jpg), "bytes");
+  eq((await req("/polaroid/..%2Fheader")).status, 404, "path is validated");
+  let html = await (await req("/")).text();
+  ok(html.includes("/polaroid/" + id) && html.includes("Alona Beach 🌴"), "guest page lists it with caption");
+  const p = await req("/api/admin/polaroid?key=" + encodeURIComponent(key), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ caption: "Panglao" }) }, cookie);
+  eq(p.status, 200, "caption edit");
+  html = await (await req("/")).text();
+  ok(html.includes('"caption":"Panglao"'), "new caption shown");
+  eq(sha(Buffer.from(await (await req("/polaroid/" + id)).arrayBuffer())), sha(jpg), "bytes kept after caption edit");
+  const files = await (await req("/api/admin/files", {}, cookie)).json();
+  ok(!files.files.some((f) => f.key.includes("polaroid")), "not listed among uploads");
+  for (let i = 1; i < 12; i++) eq((await put("", cookie)).status, 200, "fill " + i);
+  eq((await put("", cookie)).status, 409, "13th refused");
+  html = await (await req("/")).text();
+  for (const m of html.matchAll(/\/polaroid\/([a-z0-9-]+)\?/g)) {
+    eq((await req("/api/admin/polaroid?key=" + encodeURIComponent("site/polaroids/" + m[1]), { method: "DELETE" }, cookie)).status, 200, "delete");
+  }
+  eq((await req("/api/admin/polaroid?key=site/header", { method: "DELETE" }, cookie)).status, 400, "only polaroid keys");
+  ok(!(await (await req("/")).text()).includes("/polaroid/"), "all gone");
+});
+
 await test("delete one file removes it and its thumbnail", async () => {
   eq((await req("/api/admin/file?key=" + encodeURIComponent(singleKey), { method: "DELETE" }, cookie)).status, 200, "delete");
   eq((await req("/api/admin/file?key=" + encodeURIComponent(singleKey), {}, cookie)).status, 404, "file gone");

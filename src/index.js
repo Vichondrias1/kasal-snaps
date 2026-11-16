@@ -22,6 +22,12 @@ const BRAND = {
   apple: { key: "site/apple-touch-icon.png", path: "/apple-touch-icon.png", types: ["image/png"] },
 };
 const BRAND_MAX = 5 * MiB;
+// The couple's own photos, shown as polaroids on the guest page.
+const POLAROID_PREFIX = "site/polaroids/";
+const POLAROID_RE = /^site\/polaroids\/([a-z0-9]{6,12}-[a-z0-9]{10})$/;
+const POLAROID_MAX = 4 * MiB; // the admin page shrinks photos before sending
+const POLAROID_COUNT = 12;
+const POLAROID_TYPES = ["image/jpeg", "image/webp", "image/png"];
 
 const KEY_RE = /^uploads\/([a-z0-9]{6,12}-[a-z0-9]{10})(\.[a-z0-9]{1,8})?$/;
 const MSG_RE = /^messages\/[a-z0-9]{6,12}-[a-z0-9]{10}\.json$/;
@@ -53,6 +59,10 @@ async function route(request, env) {
     }
     if (path === "/header-photo") return siteFile(env, HEADER_KEY);
     for (const b of Object.values(BRAND)) if (path === b.path) return siteFile(env, b.key);
+    if (path.startsWith("/polaroid/")) {
+      const key = POLAROID_PREFIX + path.slice(10);
+      return POLAROID_RE.test(key) ? siteFile(env, key) : new Response("Not found", { status: 404 });
+    }
   }
   if (path.startsWith("/pages")) return new Response("Not found", { status: 404 });
 
@@ -86,6 +96,14 @@ async function route(request, env) {
     if (path === "/api/admin/header" && method === "PUT") return putHeader(request, env);
     if (path === "/api/admin/header" && method === "DELETE") {
       await env.BUCKET.delete(HEADER_KEY);
+      return json({ ok: true });
+    }
+    if (path === "/api/admin/polaroid" && method === "PUT") return putPolaroid(request, env, url);
+    if (path === "/api/admin/polaroid" && method === "PATCH") return captionPolaroid(request, env, url);
+    if (path === "/api/admin/polaroid" && method === "DELETE") {
+      const key = url.searchParams.get("key");
+      if (!POLAROID_RE.test(String(key))) return json({ error: "Bad key." }, 400);
+      await env.BUCKET.delete(key);
       return json({ ok: true });
     }
     if (path === "/api/admin/brand" && method === "PUT") return putBrand(request, env, url);
@@ -170,7 +188,13 @@ async function page(env, url, file) {
 
   // One list call tells us which site images (header, logo, icons) exist.
   const site = {};
-  for (const o of (await env.BUCKET.list({ prefix: "site/" })).objects) site[o.key] = encodeURIComponent(o.etag);
+  const polaroids = [];
+  const listed = await env.BUCKET.list({ prefix: "site/", include: ["customMetadata"] });
+  for (const o of listed.objects) {
+    site[o.key] = encodeURIComponent(o.etag);
+    const m = POLAROID_RE.exec(o.key);
+    if (m) polaroids.push({ src: "/polaroid/" + m[1] + "?v=" + site[o.key], caption: decode(o.customMetadata && o.customMetadata.caption) });
+  }
   const ver = (key, path) => (site[key] ? path + "?v=" + site[key] : "");
   const header = cfg.headerPhoto || ver(HEADER_KEY, "/header-photo");
   const logo = ver(BRAND.logo.key, BRAND.logo.path);
@@ -188,6 +212,7 @@ async function page(env, url, file) {
     siteUrl: cfg.siteUrl,
     storageLimitGB: cfg.storageLimitGB,
     logo,
+    polaroids, // oldest first: ids start with the upload time
   };
   // Wi-Fi details only go to the QR card page, which is admin-only.
   if (file === "card.html") {
@@ -652,6 +677,36 @@ async function putBrand(request, env, url) {
   if (len > BRAND_MAX) return json({ error: "Image must be under 5 MB." }, 413);
   if (!b.types.includes(type)) return json({ error: "Please choose a PNG, WebP or JPEG image." }, 415);
   await env.BUCKET.put(b.key, request.body, { httpMetadata: { contentType: type } });
+  return json({ ok: true });
+}
+
+async function putPolaroid(request, env, url) {
+  const len = contentLength(request);
+  const type = String(request.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
+  if (!len) return json({ error: "Empty image." }, 411);
+  if (len > POLAROID_MAX) return json({ error: "Image must be under 4 MB." }, 413);
+  if (!POLAROID_TYPES.includes(type)) return json({ error: "Please choose a JPEG, WebP or PNG photo." }, 415);
+  const existing = await env.BUCKET.list({ prefix: POLAROID_PREFIX });
+  if (existing.objects.length >= POLAROID_COUNT) return json({ error: `You can show up to ${POLAROID_COUNT} photos. Remove one first.` }, 409);
+  const id = newId();
+  await env.BUCKET.put(POLAROID_PREFIX + id, request.body, {
+    httpMetadata: { contentType: type },
+    customMetadata: { caption: encodeURIComponent(cleanText(url.searchParams.get("caption"), 60)) },
+  });
+  return json({ ok: true, key: POLAROID_PREFIX + id });
+}
+
+// R2 can't edit metadata in place, so the (small) photo is written again with the new caption.
+async function captionPolaroid(request, env, url) {
+  const key = url.searchParams.get("key");
+  if (!POLAROID_RE.test(String(key))) return json({ error: "Bad key." }, 400);
+  const obj = await env.BUCKET.get(key);
+  if (!obj) return json({ error: "Not found." }, 404);
+  const { caption } = await readJson(request);
+  await env.BUCKET.put(key, await obj.arrayBuffer(), {
+    httpMetadata: obj.httpMetadata,
+    customMetadata: { caption: encodeURIComponent(cleanText(caption, 60)) },
+  });
   return json({ ok: true });
 }
 
