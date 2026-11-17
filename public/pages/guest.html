@@ -74,6 +74,12 @@
   .item.error .status { color: var(--danger); }
   .retry { border: 0; background: none; color: var(--danger); font: 600 12.5px var(--body); text-decoration: underline; padding: 0; cursor: pointer; }
 
+  /* Finished uploads land on a little pile of prints. */
+  .pile { position: relative; height: 150px; margin: 10px 0 0; perspective: 700px; }
+  .print { position: absolute; left: 50%; top: 18px; width: 92px; height: 106px; margin-left: -46px; padding: 6px 6px 20px; background: #fffdfa; border-radius: 4px; box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 16%, transparent); }
+  .print i { display: block; width: 100%; height: 100%; border-radius: 2px; background: var(--soft) center/cover no-repeat; }
+  .burst { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
   /* ---------- message ---------- */
   #noteText { display: block; width: 100%; resize: vertical; min-height: 120px; border: 1px solid color-mix(in srgb, var(--text) 14%, var(--bg)); border-radius: var(--radius-sm); background: var(--bg); padding: 12px 16px; font: 400 16px/1.55 var(--body); color: var(--text); transition: border-color .15s; }
   #noteText:hover { border-color: color-mix(in srgb, var(--text) 28%, var(--bg)); }
@@ -87,7 +93,9 @@
   .prints { margin-top: 44px; }
   .prints h2 { font-size: clamp(34px, 10vw, 46px); letter-spacing: -0.045em; margin: 0 4px 20px; }
   .snaps { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .snap { margin: 0; padding: 8px 8px 0; background: #fffdfa; border-radius: 6px; box-shadow: var(--shadow); }
+  .snap { position: relative; margin: 0; padding: 8px 8px 0; background: #fffdfa; border-radius: 6px; box-shadow: var(--shadow); transform: rotate(var(--r, 0deg)); transition: transform .35s var(--ease), box-shadow .35s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .snap.up { transform: rotate(0) scale(1.06); z-index: 5; box-shadow: 0 2px 4px color-mix(in srgb, var(--text) 16%, transparent), 0 22px 40px -12px color-mix(in srgb, var(--text) 35%, transparent); }
+  .snap:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 50%, transparent); outline-offset: 4px; }
   .snap:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 7px); }
   .snap .ph { overflow: hidden; border-radius: 3px; aspect-ratio: 1; background: var(--soft); }
   .snap img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease); }
@@ -97,9 +105,22 @@
 
   /* ---------- motion: the hero enters once; nothing waits for the scroll ---------- */
   @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @property --reveal { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  @keyframes reveal { from { --reveal: 0deg; } to { --reveal: 400deg; } }
   @keyframes pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: no-preference) {
     .hero .logo-tile { animation: pop .7s var(--ease) both; }
+    /* The monogram draws itself in a sweep once it has loaded. */
+    .motion .logo-tile img { opacity: 0; }
+    .motion .logo-tile img.go {
+      opacity: 1;
+      -webkit-mask-image: conic-gradient(from 200deg, #000 calc(var(--reveal) - 40deg), transparent var(--reveal));
+      mask-image: conic-gradient(from 200deg, #000 calc(var(--reveal) - 40deg), transparent var(--reveal));
+      animation: reveal 1.5s cubic-bezier(.45, 0, .2, 1) .3s both;
+    }
+    /* Prints settle onto the page as they scroll into view. */
+    .motion .snap.wait { opacity: 0; transform: translateY(26px) rotate(calc(var(--r, 0deg) * 3)); }
+    .motion .snap.in { transition: transform .8s var(--ease), opacity .5s ease-out, box-shadow .35s; transition-delay: var(--d, 0s); }
     .hero .chip { animation: rise .7s var(--ease) .1s both; }
     .hero h1 { animation: rise .9s var(--ease) .2s both; }
     .hero .welcome { animation: rise .8s var(--ease) .38s both; }
@@ -112,7 +133,7 @@
     }
   }
   @keyframes sheen { from { background-position: 150% 0; } to { background-position: -50% 0; } }
-  @media (prefers-reduced-motion: reduce) { .reel, .snap img { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .reel, .snap, .snap img { transition: none; } }
 
   @media (min-width: 700px) {
     .panel { padding: 32px 32px 30px; }
@@ -169,6 +190,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
       All uploaded. Thank you.
     </p>
+    <div class="pile" id="pile" aria-hidden="true" hidden></div>
     <ul class="list" id="list"></ul>
   </section>
 
@@ -221,16 +243,87 @@ if (W.headerPhoto) {
   $("headerPhoto").hidden = false;
   $("hero").classList.add("has-photo");
 }
-if (W.logo) { $("logo").src = W.logo; $("logoTile").hidden = false; }
+if (W.logo) {
+  const img = $("logo");
+  img.onload = () => img.classList.add("go");
+  img.src = W.logo;
+  $("logoTile").hidden = false;
+  if (img.complete) img.classList.add("go");
+}
+if (!calm) document.documentElement.classList.add("motion");
+
+// When every upload has finished, a few petals drift down. About 5 seconds, then gone.
+function burst() {
+  if (calm) return;
+  const cv = document.createElement("canvas");
+  cv.className = "burst";
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const w = innerWidth, h = innerHeight;
+  cv.width = w * dpr; cv.height = h * dpr;
+  document.body.append(cv);
+  const g = cv.getContext("2d");
+  g.scale(dpr, dpr);
+  const css = getComputedStyle(document.documentElement);
+  const cols = [css.getPropertyValue("--primary"), css.getPropertyValue("--accent"), "#e9dccb"].map((c) => c.trim()).filter(Boolean);
+  const ps = Array.from({ length: 22 }, (_, i) => ({
+    x: Math.random() * w, y: -20 - Math.random() * h * 0.5, vy: 1.1 + Math.random() * 1.1,
+    ph: Math.random() * 6.3, sw: 0.6 + Math.random() * 0.9, r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.04,
+    s: 5 + Math.random() * 5, c: cols[i % cols.length],
+  }));
+  const t0 = performance.now();
+  (function step(t) {
+    g.clearRect(0, 0, w, h);
+    const fade = Math.max(0, Math.min(1, 1 - (t - t0 - 4000) / 1200));
+    for (const p of ps) {
+      p.y += p.vy; p.ph += 0.03; p.x += Math.sin(p.ph) * p.sw; p.r += p.vr;
+      g.save(); g.translate(p.x, p.y); g.rotate(p.r + Math.sin(p.ph) * 0.5);
+      g.globalAlpha = 0.85 * fade; g.fillStyle = p.c;
+      g.beginPath(); g.ellipse(0, 0, p.s, p.s * 0.5, 0, 0, Math.PI * 2); g.fill();
+      g.restore();
+    }
+    if (fade > 0) requestAnimationFrame(step); else cv.remove();
+  })(t0);
+}
+
+// Each finished upload drops onto the pile as a small print.
+let prints = 0;
+function addPrint(it) {
+  const pile = $("pile");
+  pile.hidden = false;
+  const card = document.createElement("div");
+  card.className = "print";
+  const img = document.createElement("i");
+  if (it.thumbUrl) img.style.backgroundImage = `url(${it.thumbUrl})`;
+  it.print = img;
+  card.append(img);
+  const n = prints++;
+  const rz = ((n * 37) % 25) - 12 + (Math.random() * 4 - 2);
+  const dx = ((n * 53) % 90) - 45;
+  const rest = `translate3d(${dx}px, 0, 0) rotateZ(${rz.toFixed(1)}deg)`;
+  card.style.transform = rest;
+  pile.append(card);
+  while (pile.children.length > 9) pile.firstChild.remove();
+  if (!calm) {
+    card.animate([
+      { transform: `translate3d(${dx}px, -160px, 240px) rotateX(55deg) rotateZ(${(rz * 3).toFixed(1)}deg)`, opacity: 0 },
+      { opacity: 1, offset: 0.3 },
+      { transform: rest },
+    ], { duration: 900, easing: "cubic-bezier(.2, .8, .3, 1)" });
+  }
+}
 
 // ---------- polaroids ----------
 function renderPolaroids() {
   const list = Array.isArray(W.polaroids) ? W.polaroids : [];
   if (!list.length) return;
+  const tilts = [-3.2, 2.4, 1.6, -2.2, -1.4, 3, 2.1, -2.7, -1.8, 2.6, 1.2, -3];
   const wrap = $("snaps");
-  for (const p of list) {
+  list.forEach((p, i) => {
     const fig = document.createElement("figure");
     fig.className = "snap";
+    fig.tabIndex = 0;
+    fig.style.setProperty("--r", tilts[i % tilts.length] + "deg");
+    fig.style.setProperty("--d", (i % 2) * 0.12 + "s");
     const ph = document.createElement("div");
     ph.className = "ph";
     const img = document.createElement("img");
@@ -242,9 +335,30 @@ function renderPolaroids() {
     const cap = document.createElement("figcaption");
     cap.textContent = p.caption || "";
     fig.append(ph, cap);
+    // Tapping a print straightens and lifts it.
+    const lift = () => {
+      const was = fig.classList.contains("up");
+      wrap.querySelectorAll(".snap.up").forEach((s) => s.classList.remove("up"));
+      if (!was) fig.classList.add("up");
+    };
+    fig.addEventListener("click", lift);
+    fig.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); lift(); } });
     wrap.append(fig);
-  }
+  });
   $("polaroids").hidden = false;
+  if (calm || !("IntersectionObserver" in window)) return;
+  // Prints settle onto the page as they scroll into view.
+  const figs = [...wrap.children];
+  figs.forEach((f) => f.classList.add("wait", "in"));
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      io.unobserve(e.target);
+      e.target.classList.remove("wait");
+      setTimeout(() => e.target.classList.remove("in"), 1100);
+    }
+  }, { rootMargin: "0px 0px -12% 0px" });
+  figs.forEach((f) => io.observe(f));
 }
 renderPolaroids();
 
@@ -414,6 +528,7 @@ function addItem(file, guest) {
     if (blob) {
       it.thumbUrl = URL.createObjectURL(blob);
       li.querySelector(".thumb").style.backgroundImage = `url(${it.thumbUrl})`;
+      if (it.print) it.print.style.backgroundImage = `url(${it.thumbUrl})`;
     }
   });
 }
@@ -438,6 +553,7 @@ async function run(it) {
     it.sent = it.file.size;
     it.li.classList.add("done");
     setMsg(it, "Uploaded", "");
+    addPrint(it);
     await uploadThumb(it);
   } catch (err) {
     if (err.fatal) return fail(it, err.message, false);
@@ -640,7 +756,9 @@ function render() {
     ? `Uploading <b>${done}</b> of <b>${items.length}</b>. Keep this page open.`
     : `<b>${done}</b> of <b>${items.length}</b> uploaded` + (failed ? ` · <b>${failed}</b> failed` : "");
   $("retryAll").hidden = !failed || active > 0;
-  $("thanks").hidden = !(items.length && done === items.length);
+  const allDone = !!items.length && done === items.length;
+  if (allDone && $("thanks").hidden) burst();
+  $("thanks").hidden = !allDone;
   $("queue").classList.toggle("busy", active > 0);
   for (const it of items) if (it.state === "done") it.li.querySelector(".bar > i").style.width = "100%";
   renderTotals();
