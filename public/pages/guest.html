@@ -8,172 +8,185 @@
 <link rel="stylesheet" href="/app.css">
 <!--WEDDING-->
 <style>
-  main { max-width: 520px; margin: 0 auto; padding: 0 24px calc(48px + env(safe-area-inset-bottom)); }
-  .hero { text-align: center; padding: 40px 0 8px; }
-  .hero img { width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px; margin-bottom: 28px; display: block; }
-  .hero img.logo { width: min(220px, 60vw); height: auto; max-height: none; object-fit: contain; border-radius: 0; margin: -16px auto 6px; }
-  .hero h1 { font-size: clamp(48px, 14vw, 68px); line-height: 1; margin: 6px 0 12px; letter-spacing: -0.01em; }
-  .hero h1 .amp { font-style: italic; color: var(--accent); font-size: 0.86em; padding: 0 0.04em; }
-  .meta { font-family: var(--display); font-variant: small-caps; text-transform: lowercase; letter-spacing: 0.16em; font-size: 17px; color: var(--muted); }
-  .rule { width: 56px; height: 1px; background: var(--accent); margin: 24px auto; }
-  .welcome { font-family: var(--display); font-style: italic; font-size: 21px; line-height: 1.4; color: var(--text); max-width: 400px; margin: 0 auto; }
-  .card { border-top: 1px solid var(--line); padding: 26px 0 0; margin-top: 30px; }
-  #uploader label { font-family: var(--display); font-size: 18px; color: var(--text); margin-bottom: 0; }
-  #uploader input[type="text"] { border: 0; border-bottom: 1px solid color-mix(in srgb, var(--text) 35%, var(--bg)); border-radius: 0; background: transparent; padding: 0 2px; min-height: 44px; }
-  #uploader input[type="text"]:focus-visible { outline: 0; border-bottom: 2px solid var(--primary); }
-  #uploader input[aria-invalid="true"] { border-bottom-color: var(--danger); }
-  .name-hint { margin: 8px 0 0; font-size: 14px; color: var(--danger); }
-  #uploader input::placeholder { color: color-mix(in srgb, var(--text) 40%, var(--bg)); }
-  .pick { width: 100%; min-height: 60px; font-size: 21px; margin-top: 26px; }
-  .hint { font-family: var(--display); font-style: italic; font-size: 17px; color: var(--muted); margin: 12px 0 0; text-align: center; }
-  .closed { text-align: center; }
-  .closed h2 { font-size: 30px; margin-bottom: 4px; }
-  .summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-family: var(--display); font-size: 19px; }
-  .summary b { font-weight: 600; }
-  .list { list-style: none; margin: 14px 0 0; padding: 0; }
+  /* ---------- hero: a warm dark ground that burns down into the page colour ---------- */
+  .hero {
+    --hero-ink: color-mix(in srgb, var(--text) 78%, #000);
+    position: relative; isolation: isolate; overflow: hidden;
+    min-height: 60svh; display: flex; align-items: center; justify-content: center;
+    padding: calc(56px + env(safe-area-inset-top)) 20px 120px; text-align: center; color: #fff7f0;
+    background:
+      radial-gradient(90% 55% at 50% 100%, color-mix(in srgb, var(--accent) 85%, #fff) 0%, transparent 70%),
+      linear-gradient(180deg, var(--hero-ink) 0%, color-mix(in srgb, var(--hero-ink) 55%, var(--accent)) 52%, var(--accent) 80%, var(--bg) 100%);
+  }
+  .hero-photo { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+  .hero.has-photo::before {
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--hero-ink) 45%, transparent) 0%, color-mix(in srgb, var(--hero-ink) 70%, transparent) 70%, var(--bg) 100%);
+  }
+  .hero.has-photo { background: var(--hero-ink); }
+  .hero-in { max-width: 640px; display: flex; flex-direction: column; align-items: center; }
+  .logo-tile { width: 88px; height: 88px; display: grid; place-items: center; margin-bottom: 22px; border-radius: 24px; background: var(--bg); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .45); }
+  .logo-tile img { max-width: 68px; max-height: 68px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; font-weight: 500; letter-spacing: 0; color: rgba(255, 247, 240, .92); background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .18); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .chip:empty { display: none; }
+  .hero h1 { font-size: clamp(54px, 15.5vw, 104px); line-height: .95; letter-spacing: -0.05em; font-weight: 620; margin: 20px 0 18px; text-wrap: balance; }
+  .hero h1 .amp { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; font-size: 1.04em; color: color-mix(in srgb, var(--accent) 45%, #fff); }
+  .font-modern .hero h1 .amp { font-family: inherit; font-style: normal; font-weight: 300; }
+  .welcome { margin: 0; max-width: 34ch; font-size: 18px; line-height: 1.55; color: rgba(255, 244, 236, .88); text-wrap: pretty; }
+  .welcome:empty { display: none; }
+
+  /* ---------- panels ---------- */
+  main { position: relative; z-index: 1; max-width: 560px; margin: -84px auto 0; padding: 0 16px calc(56px + env(safe-area-inset-bottom)); }
+  .panel { background: var(--card); border-radius: 24px; box-shadow: var(--shadow); padding: 26px 22px 24px; margin-bottom: 14px; border: 1px solid color-mix(in srgb, var(--text) 6%, transparent); }
+  .panel h2 { font-size: 26px; }
+  .lede { margin: 8px 0 22px; color: var(--muted); font-size: 15.5px; }
+  .admin-note { display: block; width: fit-content; margin: 0 auto 14px; padding: 8px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 500; text-align: center; }
+
+  #guestName[aria-invalid="true"] { border-color: var(--danger); }
+  #guestName::placeholder, #noteText::placeholder { color: color-mix(in srgb, var(--text) 38%, var(--bg)); }
+  .name-hint { margin: 8px 0 0; font-size: 14px; font-weight: 500; color: var(--danger); }
+  .pick { width: 100%; min-height: 58px; font-size: 17px; margin-top: 16px; }
+  .pick svg { width: 20px; height: 20px; }
+
+  /* ---------- countdown: digits roll like a counter ---------- */
+  .countdown { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 8px; margin: 22px 0 16px; }
+  .countdown > div { background: var(--soft); border-radius: 16px; padding: 14px 6px 10px; text-align: center; }
+  .odo { display: inline-flex; font-size: clamp(30px, 9vw, 42px); font-weight: 620; letter-spacing: -0.04em; line-height: 1; height: 1em; font-variant-numeric: tabular-nums; }
+  .dg { display: inline-block; height: 1em; overflow: hidden; }
+  .reel { display: flex; flex-direction: column; transition: transform .7s var(--ease); }
+  .reel i { font-style: normal; height: 1em; line-height: 1; }
+  .countdown small { display: block; margin-top: 8px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+  .hint { margin: 0; color: var(--muted); font-size: 15px; }
+
+  /* ---------- upload queue ---------- */
+  .summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: 16px; font-weight: 500; }
+  .summary b { font-weight: 650; }
+  .done-row { display: flex; align-items: center; gap: 12px; margin: 18px 0 2px; font-weight: 600; font-size: 17px; }
+  .done-row svg { flex: none; width: 32px; height: 32px; padding: 7px; border-radius: 50%; background: var(--primary); color: #fff; }
+  .list { list-style: none; margin: 10px 0 0; padding: 0; }
   .item { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
   .item:first-child { border-top: 0; }
-  .thumb { width: 52px; height: 52px; border-radius: 3px; background: var(--soft) center/cover no-repeat; }
-  .name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .status { font-size: 12px; color: var(--muted); margin-top: 5px; display: flex; justify-content: space-between; gap: 8px; }
-  .bar { height: 3px; border-radius: 0; }
-  .item.done .bar > i { background: color-mix(in srgb, var(--primary) 55%, var(--bg)); }
+  .thumb { width: 52px; height: 52px; border-radius: 12px; background: var(--soft) center/cover no-repeat; }
+  .name { font-size: 14.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 7px; }
+  .item .bar { height: 4px; }
+  .status { font-size: 12.5px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
+  .item.done .bar > i { background: var(--primary); }
   .item.error .status { color: var(--danger); }
-  .retry { border: 0; background: none; color: var(--danger); font: 600 12px var(--body); text-decoration: underline; padding: 0; cursor: pointer; }
-  /* Finished uploads land on a little pile of prints. */
-  .pile { position: relative; height: 150px; margin: 6px 0 4px; perspective: 700px; }
-  .print { position: absolute; left: 50%; top: 18px; width: 92px; height: 106px; margin-left: -46px; padding: 6px 6px 20px; background: #fff; border: 1px solid var(--line); box-shadow: 0 2px 6px color-mix(in srgb, var(--text) 12%, transparent); }
-  .print i { display: block; width: 100%; height: 100%; background: var(--soft) center/cover no-repeat; }
-  .thanks { text-align: center; padding: 14px 0 4px; font-family: var(--display); font-style: italic; font-size: 26px; color: var(--primary); }
-  /* Guestbook note, written on a ruled line like a card. */
-  #note label { font-family: var(--display); font-size: 18px; color: var(--text); }
-  #note textarea { width: 100%; resize: vertical; min-height: 110px; border: 1px solid color-mix(in srgb, var(--text) 25%, var(--bg)); border-radius: 3px; background: var(--card); padding: 10px 12px; font: 400 16px/1.5 var(--body); color: var(--text); }
-  #note textarea:focus-visible { outline: 0; border-color: var(--primary); }
-  #note textarea::placeholder { color: color-mix(in srgb, var(--text) 40%, var(--bg)); font-style: italic; }
-  .note-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
-  .note-err { font-size: 14px; color: var(--danger); }
-  .note-sent { text-align: center; font-family: var(--display); font-style: italic; font-size: 22px; color: var(--primary); margin: 0; }
-  .linkish { border: 0; background: none; padding: 0; font: inherit; font-size: 16px; font-style: normal; color: var(--muted); text-decoration: underline; cursor: pointer; }
-  /* The couple's photos as polaroids: white frame, deep bottom edge, a strip of tape. */
-  .polaroids h2 { text-align: center; font-size: 34px; margin: 0 0 26px; }
-  .snaps { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 18px; padding: 4px 4px 12px; }
-  .snap { position: relative; margin: 0; padding: 9px 9px 0; background: #fffdf9; border: 0; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 18%, transparent), 0 8px 18px color-mix(in srgb, var(--text) 12%, transparent); transform: rotate(var(--r, 0deg)); transition: transform .35s cubic-bezier(.2, .8, .3, 1), box-shadow .35s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  .snap:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 9px); }
-  .snap img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--soft); filter: saturate(.92) contrast(1.02); }
-  .snap figcaption { min-height: 46px; display: flex; align-items: center; justify-content: center; padding: 6px 4px 8px; font-family: var(--display); font-style: italic; font-size: 17px; line-height: 1.15; text-align: center; color: color-mix(in srgb, var(--text) 80%, #fffdf9); }
-  .snap::before { content: ""; position: absolute; top: -9px; left: 50%; width: 64px; height: 20px; margin-left: -32px; background: color-mix(in srgb, var(--primary) 30%, transparent); transform: rotate(calc(var(--r, 0deg) * -1.5)); opacity: .8; }
-  .snap.up { transform: rotate(0) scale(1.06); z-index: 5; box-shadow: 0 2px 4px color-mix(in srgb, var(--text) 18%, transparent), 0 18px 34px color-mix(in srgb, var(--text) 20%, transparent); }
-  .snap:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
-  .countdown { display: flex; justify-content: center; gap: 10px; margin: 24px auto 18px; }
-  .countdown > div { display: flex; flex-direction: column; align-items: center; }
-  /* Flip-clock tile: two halves of a card, split by a hairline. */
-  .tile { position: relative; width: 62px; height: 70px; perspective: 320px; font-family: var(--display); font-size: 44px; color: var(--primary); font-variant-numeric: lining-nums tabular-nums; }
-  .tile.wide { width: 80px; }
-  .tile::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: color-mix(in srgb, var(--text) 10%, var(--bg)); z-index: 3; }
-  .half { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: var(--card); border: 1px solid var(--line); }
-  .half span { position: absolute; left: 0; right: 0; height: 200%; display: flex; align-items: center; justify-content: center; line-height: 1; }
-  .half.top { top: 0; border-bottom: 0; border-radius: 3px 3px 0 0; }
-  .half.bot { bottom: 0; border-top: 0; border-radius: 0 0 3px 3px; background: color-mix(in srgb, var(--card) 92%, var(--text)); }
-  .half.top span { top: 0; }
-  .half.bot span { bottom: 0; }
-  .half.flip-out { z-index: 2; transform-origin: bottom; backface-visibility: hidden; animation: flipOut .3s ease-in forwards; }
-  .half.flip-in { z-index: 2; transform-origin: top; transform: rotateX(90deg); backface-visibility: hidden; animation: flipIn .3s .3s ease-out forwards; }
-  @keyframes flipOut { to { transform: rotateX(-90deg); } }
-  @keyframes flipIn { to { transform: rotateX(0deg); } }
-  .countdown small { display: block; margin-top: 6px; font-family: var(--display); font-variant: small-caps; text-transform: lowercase; letter-spacing: 0.18em; font-size: 15px; color: var(--muted); }
-  .burst { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+  .retry { border: 0; background: none; color: var(--danger); font: 600 12.5px var(--body); text-decoration: underline; padding: 0; cursor: pointer; }
 
-  /* Motion: only for people whose phone isn't set to reduce motion. */
-  @property --reveal { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-  @keyframes reveal { from { --reveal: 0deg; } to { --reveal: 400deg; } }
-  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  @keyframes sheen { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+  /* ---------- message ---------- */
+  #noteText { display: block; width: 100%; resize: vertical; min-height: 120px; border: 1px solid color-mix(in srgb, var(--text) 14%, var(--bg)); border-radius: var(--radius-sm); background: var(--bg); padding: 12px 16px; font: 400 16px/1.55 var(--body); color: var(--text); transition: border-color .15s; }
+  #noteText:hover { border-color: color-mix(in srgb, var(--text) 28%, var(--bg)); }
+  .note-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+  .note-err { font-size: 14px; font-weight: 500; color: var(--danger); }
+  .note-sent { margin: 0; font-size: 17px; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .linkish { border: 0; background: none; padding: 0; font: 500 15px var(--body); color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 44px; }
+  .linkish:hover { color: var(--text); }
+
+  /* ---------- the couple's photos, as square prints ---------- */
+  .prints { margin-top: 44px; }
+  .prints h2 { font-size: clamp(34px, 10vw, 46px); letter-spacing: -0.045em; margin: 0 4px 20px; }
+  .snaps { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .snap { margin: 0; padding: 8px 8px 0; background: #fffdfa; border-radius: 6px; box-shadow: var(--shadow); }
+  .snap:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 7px); }
+  .snap .ph { overflow: hidden; border-radius: 3px; aspect-ratio: 1; background: var(--soft); }
+  .snap img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease); }
+  .snap:hover img { transform: scale(1.03); }
+  .snap figcaption { min-height: 40px; display: flex; align-items: center; justify-content: center; padding: 6px 4px 8px; font-size: 13.5px; font-weight: 500; line-height: 1.25; text-align: center; color: color-mix(in srgb, var(--text) 75%, #fff); }
+  .snap figcaption:empty { min-height: 14px; padding: 0; }
+
+  /* ---------- motion: the hero enters once; nothing waits for the scroll ---------- */
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: no-preference) {
-    .motion .hero img.logo { opacity: 0; }
-    .motion .hero img.logo.go {
-      opacity: 1;
-      -webkit-mask-image: conic-gradient(from 200deg, #000 calc(var(--reveal) - 40deg), transparent var(--reveal));
-      mask-image: conic-gradient(from 200deg, #000 calc(var(--reveal) - 40deg), transparent var(--reveal));
-      animation: reveal 1.5s cubic-bezier(.45, 0, .2, 1) both;
-    }
-    .motion .hero h1 { animation: rise .9s ease-out both; animation-delay: var(--t0); }
-    .motion .hero .meta, .motion .hero .welcome { animation: fade .8s ease-out both; }
-    .motion .hero .meta { animation-delay: var(--t1); }
-    .motion .hero .rule { animation: draw .7s ease-out both; animation-delay: var(--t2); }
-    .motion .hero .welcome { animation-delay: var(--t3); }
-    .motion #uploader, .motion #closed, .motion #note { animation: rise .6s ease-out both; animation-delay: var(--t3); }
+    .hero .logo-tile { animation: pop .7s var(--ease) both; }
+    .hero .chip { animation: rise .7s var(--ease) .1s both; }
+    .hero h1 { animation: rise .9s var(--ease) .2s both; }
+    .hero .welcome { animation: rise .8s var(--ease) .38s both; }
+    main { animation: rise .8s var(--ease) .5s both; }
+    .item { animation: rise .35s var(--ease) both; }
     #queue.busy .item:not(.done):not(.error) .bar > i, #queue.busy #totalBar {
-      background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .5) 50%, transparent 70%);
+      background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .45) 50%, transparent 70%);
       background-size: 200% 100%;
       animation: sheen 1.6s linear infinite;
     }
-    .item { animation: rise .35s ease-out both; }
-    .thanks:not([hidden]) { animation: rise .6s ease-out both; }
-    .motion .snap.wait { opacity: 0; transform: translateY(26px) rotate(calc(var(--r, 0deg) * 3)); }
-    .motion .snap.in { transition: transform .8s cubic-bezier(.2, .8, .3, 1), opacity .5s ease-out, box-shadow .35s; transition-delay: var(--d, 0s); }
   }
-  .admin-note { text-align: center; font-size: 13px; color: var(--muted); border: 1px dashed var(--line); padding: 8px 12px; margin-top: 20px; }
+  @keyframes sheen { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+  @media (prefers-reduced-motion: reduce) { .reel, .snap img { transition: none; } }
+
+  @media (min-width: 700px) {
+    .panel { padding: 32px 32px 30px; }
+    .snaps { grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+    .snap:last-child:nth-child(odd) { grid-column: auto; width: auto; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <header class="hero">
-    <img id="headerPhoto" alt="" hidden>
-    <img id="logo" class="logo" alt="" hidden>
+<header class="hero" id="hero">
+  <img id="headerPhoto" class="hero-photo" alt="" hidden>
+  <div class="hero-in">
+    <div class="logo-tile" id="logoTile" hidden><img id="logo" alt=""></div>
+    <span class="chip" id="meta"></span>
     <h1 id="names"></h1>
-    <div class="meta" id="meta"></div>
-    <div class="rule"></div>
     <p class="welcome" id="welcome"></p>
-  </header>
+  </div>
+</header>
 
-  <p class="admin-note" id="adminNote" hidden>You're logged in as admin, so uploads work outside the upload window too.</p>
+<main>
+  <p class="admin-note" id="adminNote" hidden>Signed in as admin: uploads work outside the upload window.</p>
 
-  <section class="card closed" id="closed" hidden>
+  <section class="panel" id="closed" hidden>
     <h2 id="closedTitle"></h2>
     <div class="countdown" id="countdown" aria-hidden="true" hidden>
-      <div><div class="tile wide" id="cdD"></div><small>days</small></div>
-      <div><div class="tile" id="cdH"></div><small>hours</small></div>
-      <div><div class="tile" id="cdM"></div><small>min</small></div>
-      <div><div class="tile" id="cdS"></div><small>sec</small></div>
+      <div><span class="odo" id="cdD"></span><small>days</small></div>
+      <div><span class="odo" id="cdH"></span><small>hours</small></div>
+      <div><span class="odo" id="cdM"></span><small>minutes</small></div>
+      <div><span class="odo" id="cdS"></span><small>seconds</small></div>
     </div>
     <p class="hint" id="closedHint"></p>
   </section>
 
-  <section class="card" id="uploader" hidden>
+  <section class="panel" id="uploader" hidden>
+    <h2>Share your photos</h2>
+    <p class="lede">Photos and videos go straight to us at full quality. Long videos are fine.</p>
     <label for="guestName">Your name</label>
     <input type="text" id="guestName" autocomplete="name" maxlength="50" required aria-describedby="nameHint" placeholder="So we know who took them">
     <p class="name-hint" id="nameHint" hidden>Please add your name first.</p>
     <input type="file" id="files" accept="image/*,video/*" multiple hidden>
-    <button class="btn pick" id="pickBtn" type="button">Add your photos</button>
-    <p class="hint">Videos too. Nothing gets compressed.</p>
+    <button class="btn pick" id="pickBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Choose photos and videos
+    </button>
   </section>
 
-  <section class="card" id="queue" hidden>
+  <section class="panel" id="queue" hidden>
     <div class="summary">
       <span id="summaryText"></span>
       <button class="btn small ghost" id="retryAll" type="button" hidden>Retry failed</button>
     </div>
     <div class="bar"><i id="totalBar"></i></div>
-    <div class="pile" id="pile" aria-hidden="true" hidden></div>
-    <div class="thanks" id="thanks" hidden>Got them. Thank you.</div>
+    <p class="done-row" id="thanks" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      All uploaded. Thank you.
+    </p>
     <ul class="list" id="list"></ul>
   </section>
 
-  <section class="card" id="note" hidden>
+  <section class="panel" id="note" hidden>
+    <h2>Leave us a message</h2>
+    <p class="lede">A wish, a memory, some advice. Only the two of us will read it.</p>
     <form id="noteForm" novalidate>
-      <label for="noteText">Leave us a message</label>
-      <textarea id="noteText" rows="4" maxlength="1000" placeholder="A wish, a memory, some advice…"></textarea>
+      <label for="noteText" class="sr">Your message</label>
+      <textarea id="noteText" rows="4" maxlength="1000" placeholder="Write it here"></textarea>
       <div class="note-foot">
         <span class="note-err" id="noteErr" role="alert"></span>
-        <button class="btn small" id="noteBtn" type="submit">Send message</button>
+        <button class="btn" id="noteBtn" type="submit">Send message</button>
       </div>
     </form>
-    <p class="note-sent" id="noteSent" hidden>Thank you for the note. <button class="linkish" id="noteAgain" type="button">Write another</button></p>
+    <p class="note-sent" id="noteSent" hidden>Message sent. Thank you. <button class="linkish" id="noteAgain" type="button">Write another</button></p>
   </section>
 
-  <section class="card polaroids" id="polaroids" hidden>
+  <section class="prints" id="polaroids" hidden>
     <h2>Us, so far</h2>
     <div class="snaps" id="snaps"></div>
   </section>
@@ -188,10 +201,11 @@ const PART_SIZE = 25 * MiB;
 const MAX_FILE = 5 * 1024 * MiB;
 const PARALLEL = 3;
 const AUTO_RETRIES = 3;
+const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // ---------- header ----------
 if (W.font === "modern") document.documentElement.classList.add("font-modern");
-// Names with the "&" (or "and") set in copper italic, like printed stationery.
+// Names with the "&" (or "and") set apart in italic.
 for (const part of W.coupleNames.split(/(\s(?:&|and|\+)\s)/)) {
   if (/^\s(?:&|and|\+)\s$/.test(part)) {
     const amp = document.createElement("span");
@@ -201,132 +215,36 @@ for (const part of W.coupleNames.split(/(\s(?:&|and|\+)\s)/)) {
   } else $("names").append(part);
 }
 $("meta").textContent = [W.weddingDate, W.venue].filter(Boolean).join(" · ");
-$("welcome").textContent = W.welcomeMessage;
-if (W.headerPhoto) { $("headerPhoto").src = W.headerPhoto; $("headerPhoto").hidden = false; }
-if (W.logo) {
-  const img = $("logo");
-  img.onload = () => img.classList.add("go");
-  img.src = W.logo;
-  img.hidden = false;
-  if (img.complete) img.classList.add("go");
+$("welcome").textContent = W.welcomeMessage || "";
+if (W.headerPhoto) {
+  $("headerPhoto").src = W.headerPhoto;
+  $("headerPhoto").hidden = false;
+  $("hero").classList.add("has-photo");
 }
-
-// ---------- motion ----------
-const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
-if (!calm) {
-  const t = W.logo ? 0.8 : 0.1;
-  const root = document.documentElement.style;
-  root.setProperty("--t0", t.toFixed(2) + "s");
-  root.setProperty("--t1", (t + 0.5).toFixed(2) + "s");
-  root.setProperty("--t2", (t + 0.7).toFixed(2) + "s");
-  root.setProperty("--t3", (t + 1.0).toFixed(2) + "s");
-  document.documentElement.classList.add("motion");
-}
-
-// When every upload has finished, a few petals drift down. About 5 seconds, then gone.
-function burst() {
-  if (calm) return;
-  const cv = document.createElement("canvas");
-  cv.className = "burst";
-  const dpr = Math.min(2, devicePixelRatio || 1);
-  const w = innerWidth, h = innerHeight;
-  cv.width = w * dpr; cv.height = h * dpr;
-  document.body.append(cv);
-  const g = cv.getContext("2d");
-  g.scale(dpr, dpr);
-  const css = getComputedStyle(document.documentElement);
-  const cols = [css.getPropertyValue("--primary"), css.getPropertyValue("--accent"), "#b48cc8", "#e9dccb"].map((c) => c.trim()).filter(Boolean);
-  const ps = Array.from({ length: 22 }, (_, i) => ({
-    x: Math.random() * w, y: -20 - Math.random() * h * 0.5, vy: 1.1 + Math.random() * 1.1,
-    ph: Math.random() * 6.3, sw: 0.6 + Math.random() * 0.9, r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.04,
-    s: 5 + Math.random() * 5, c: cols[i % cols.length],
-  }));
-  const t0 = performance.now();
-  (function step(t) {
-    g.clearRect(0, 0, w, h);
-    const fade = Math.max(0, Math.min(1, 1 - (t - t0 - 4000) / 1200));
-    for (const p of ps) {
-      p.y += p.vy; p.ph += 0.03; p.x += Math.sin(p.ph) * p.sw; p.r += p.vr;
-      g.save(); g.translate(p.x, p.y); g.rotate(p.r + Math.sin(p.ph) * 0.5);
-      g.globalAlpha = 0.85 * fade; g.fillStyle = p.c;
-      g.beginPath(); g.ellipse(0, 0, p.s, p.s * 0.5, 0, 0, Math.PI * 2); g.fill();
-      g.restore();
-    }
-    if (fade > 0) requestAnimationFrame(step); else cv.remove();
-  })(t0);
-}
-
-// Each finished upload drops onto the pile as a small print.
-let prints = 0;
-function addPrint(it) {
-  const pile = $("pile");
-  pile.hidden = false;
-  const card = document.createElement("div");
-  card.className = "print";
-  const img = document.createElement("i");
-  if (it.thumbUrl) img.style.backgroundImage = `url(${it.thumbUrl})`;
-  it.print = img;
-  card.append(img);
-  const n = prints++;
-  const rz = ((n * 37) % 25) - 12 + (Math.random() * 4 - 2);
-  const dx = ((n * 53) % 90) - 45;
-  const rest = `translate3d(${dx}px, 0, 0) rotateZ(${rz.toFixed(1)}deg)`;
-  card.style.transform = rest;
-  pile.append(card);
-  while (pile.children.length > 9) pile.firstChild.remove();
-  if (!calm) {
-    card.animate([
-      { transform: `translate3d(${dx}px, -160px, 240px) rotateX(55deg) rotateZ(${(rz * 3).toFixed(1)}deg)`, opacity: 0 },
-      { opacity: 1, offset: 0.3 },
-      { transform: rest },
-    ], { duration: 900, easing: "cubic-bezier(.2, .8, .3, 1)" });
-  }
-}
+if (W.logo) { $("logo").src = W.logo; $("logoTile").hidden = false; }
 
 // ---------- polaroids ----------
-// Each print gets its own slight tilt; tapping one straightens and lifts it.
 function renderPolaroids() {
   const list = Array.isArray(W.polaroids) ? W.polaroids : [];
   if (!list.length) return;
-  const tilts = [-3.2, 2.4, 1.6, -2.2, -1.4, 3, 2.1, -2.7, -1.8, 2.6, 1.2, -3];
   const wrap = $("snaps");
-  list.forEach((p, i) => {
+  for (const p of list) {
     const fig = document.createElement("figure");
     fig.className = "snap";
-    fig.tabIndex = 0;
-    fig.style.setProperty("--r", tilts[i % tilts.length] + "deg");
-    fig.style.setProperty("--d", (i % 2) * 0.12 + "s");
+    const ph = document.createElement("div");
+    ph.className = "ph";
     const img = document.createElement("img");
     img.src = p.src;
     img.alt = p.caption || "A photo of the two of us";
     img.loading = "lazy";
     img.decoding = "async";
+    ph.append(img);
     const cap = document.createElement("figcaption");
     cap.textContent = p.caption || "";
-    fig.append(img, cap);
-    const lift = () => {
-      const was = fig.classList.contains("up");
-      wrap.querySelectorAll(".snap.up").forEach((s) => s.classList.remove("up"));
-      if (!was) fig.classList.add("up");
-    };
-    fig.addEventListener("click", lift);
-    fig.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); lift(); } });
+    fig.append(ph, cap);
     wrap.append(fig);
-  });
+  }
   $("polaroids").hidden = false;
-  if (calm || !("IntersectionObserver" in window)) return;
-  // Prints settle onto the page as they scroll into view.
-  const prints = [...wrap.children];
-  prints.forEach((f) => f.classList.add("wait", "in"));
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      io.unobserve(e.target);
-      e.target.classList.remove("wait");
-      setTimeout(() => e.target.classList.remove("in"), 1100);
-    }
-  }, { rootMargin: "0px 0px -12% 0px" });
-  prints.forEach((f) => io.observe(f));
 }
 renderPolaroids();
 
@@ -360,26 +278,22 @@ async function refreshStatus() {
   }
   return s;
 }
-// One flip-clock tile: the old top half folds down, revealing the new number.
-function half(cls, text) {
-  const d = document.createElement("div");
-  d.className = "half " + cls;
-  const sp = document.createElement("span");
-  sp.textContent = text;
-  d.append(sp);
-  return d;
-}
-function flipTo(tile, text) {
-  const old = tile.dataset.v;
-  if (old === text) return;
-  tile.dataset.v = text;
-  clearTimeout(tile._t);
-  if (old === undefined || calm || document.hidden) {
-    tile.replaceChildren(half("top", text), half("bot", text));
-    return;
+
+// A counter whose digits roll to their new value.
+function setOdo(el, text) {
+  if (el.dataset.v === text) return;
+  el.dataset.v = text;
+  while (el.children.length > text.length) el.firstChild.remove();
+  while (el.children.length < text.length) {
+    const dg = document.createElement("span");
+    dg.className = "dg";
+    const reel = document.createElement("span");
+    reel.className = "reel";
+    for (let n = 0; n < 10; n++) { const i = document.createElement("i"); i.textContent = n; reel.append(i); }
+    dg.append(reel);
+    el.prepend(dg);
   }
-  tile.replaceChildren(half("top", text), half("bot", old), half("top flip-out", old), half("bot flip-in", text));
-  tile._t = setTimeout(() => tile.replaceChildren(half("top", text), half("bot", text)), 650);
+  [...text].forEach((ch, i) => { el.children[i].firstChild.style.transform = `translateY(${-Number(ch)}em)`; });
 }
 let countdownTimer = 0;
 function startCountdown() {
@@ -390,7 +304,7 @@ function startCountdown() {
   const tick = () => {
     const left = Math.max(0, Math.floor((target - Date.now()) / 1000));
     const v = [Math.floor(left / 86400), Math.floor((left % 86400) / 3600), Math.floor((left % 3600) / 60), left % 60];
-    v.forEach((x, i) => flipTo($(ids[i]), i ? String(x).padStart(2, "0") : String(x)));
+    v.forEach((x, i) => setOdo($(ids[i]), i ? String(x).padStart(2, "0") : String(x)));
     if (left === 0) {
       clearInterval(countdownTimer);
       setTimeout(refreshStatus, 1500);
@@ -500,7 +414,6 @@ function addItem(file, guest) {
     if (blob) {
       it.thumbUrl = URL.createObjectURL(blob);
       li.querySelector(".thumb").style.backgroundImage = `url(${it.thumbUrl})`;
-      if (it.print) it.print.style.backgroundImage = `url(${it.thumbUrl})`;
     }
   });
 }
@@ -525,7 +438,6 @@ async function run(it) {
     it.sent = it.file.size;
     it.li.classList.add("done");
     setMsg(it, "Uploaded", "");
-    addPrint(it);
     await uploadThumb(it);
   } catch (err) {
     if (err.fatal) return fail(it, err.message, false);
@@ -725,12 +637,10 @@ function render() {
   const failed = items.filter((i) => i.state === "error").length;
   const active = items.length - done - failed;
   $("summaryText").innerHTML = active
-    ? `Uploading <b>${done}</b> of <b>${items.length}</b>… keep this page open`
+    ? `Uploading <b>${done}</b> of <b>${items.length}</b>. Keep this page open.`
     : `<b>${done}</b> of <b>${items.length}</b> uploaded` + (failed ? ` · <b>${failed}</b> failed` : "");
   $("retryAll").hidden = !failed || active > 0;
-  const allDone = !!items.length && done === items.length;
-  if (allDone && $("thanks").hidden) burst();
-  $("thanks").hidden = !allDone;
+  $("thanks").hidden = !(items.length && done === items.length);
   $("queue").classList.toggle("busy", active > 0);
   for (const it of items) if (it.state === "done") it.li.querySelector(".bar > i").style.width = "100%";
   renderTotals();

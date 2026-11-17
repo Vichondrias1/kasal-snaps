@@ -26,17 +26,16 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; padding: 0.38in 0.34in; position: relative; overflow: hidden;
   }
-  .card::before { content: ""; position: absolute; inset: 0.16in; border: 1px solid var(--accent); opacity: .8; pointer-events: none; }
-  .card::after { content: ""; position: absolute; inset: 0.21in; border: 0.5px solid var(--accent); opacity: .5; pointer-events: none; }
+  .card::before { content: ""; position: absolute; inset: 0.16in; border: 1px solid var(--accent); border-radius: 14px; opacity: .8; pointer-events: none; }
   .logo { display: block; height: 0.85in; width: auto; max-width: 1.7in; margin: 0 auto 3pt; }
   .card.two .logo { height: 0.78in; }
   .card.has-logo .kicker { display: none; }
   .card.has-logo .single .qr { width: 1.75in; height: 1.75in; }
-  .kicker { text-transform: uppercase; letter-spacing: .24em; font-size: 8.5pt; color: var(--muted); }
-  .names { font-family: var(--display); font-size: 32pt; line-height: 1.05; margin: 8pt 0 4pt; }
-  .date { font-family: var(--display); font-style: italic; font-size: 12.5pt; color: var(--muted); }
+  .kicker { text-transform: uppercase; letter-spacing: .16em; font-size: 8pt; font-weight: 600; color: var(--muted); }
+  .names { font-family: var(--display); font-size: 32pt; font-weight: 620; letter-spacing: -0.045em; line-height: 1; margin: 8pt 0 5pt; }
+  .date { font-family: var(--display); font-weight: 500; font-size: 11.5pt; color: var(--muted); }
   .rule { width: 0.5in; height: 1px; background: var(--accent); margin: 12pt auto; opacity: .7; }
-  .headline { font-family: var(--display); font-size: 17pt; line-height: 1.2; margin-bottom: 4pt; }
+  .headline { font-family: var(--display); font-size: 16pt; font-weight: 600; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 5pt; }
   .qr { width: 1.95in; height: 1.95in; margin: 10pt auto 8pt; padding: 0.08in; background: #fff; border-radius: 6px; }
   .qr svg { width: 100%; height: 100%; display: block; }
   .steps { font-size: 8.5pt; color: var(--muted); line-height: 1.45; }
@@ -50,7 +49,7 @@
   .card.two .rule { margin: 9pt auto; }
   .card.two .headline { font-size: 15pt; margin-bottom: 8pt; }
   .col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-  .num { font-family: var(--display); font-size: 12.5pt; line-height: 1.15; margin-bottom: 5pt; }
+  .num { font-family: var(--display); font-size: 12pt; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 5pt; }
   .num b { display: inline-block; width: 16pt; height: 16pt; line-height: 16pt; border-radius: 50%; background: var(--primary); color: #fff; font: 600 8.5pt/16pt var(--body); margin-right: 4pt; vertical-align: 1pt; }
   .col .qr { width: 1.34in; height: 1.34in; margin: 0 auto 5pt; padding: 0.06in; }
   .small { font-size: 7.5pt; color: var(--muted); line-height: 1.35; word-break: break-word; }

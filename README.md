@@ -167,7 +167,7 @@ All your details live in **one file**: `src/config.js`. Open it in any text edit
 | `uploadCloses` | When uploads stop | `"2027-09-25T23:59:59-04:00"` |
 | `timezone` | Your time zone, for showing dates | `"America/New_York"`, `"Asia/Manila"`, `"Europe/London"` |
 | `colors` | Background, buttons, text, and an accent for thin lines & the QR card border | ivory `#FBF8F1`, sage `#7D8F69` |
-| `font` | `"serif"` (elegant) or `"modern"` | `"serif"` |
+| `font` | `"serif"` (the "&" between your names in italic serif) or `"modern"` (all sans-serif) | `"serif"` |
 | `headerPhoto` | Optional photo at the top (`""` for none) | `"https://…/us.jpg"` or `"/header.jpg"` |
 | `siteUrl` | Optional: the link printed on the QR card | `""` (uses the site's own address) |
 | `wifiName`, `wifiPassword`, `wifiSecurity` | Optional venue Wi-Fi, printed as a second "join the Wi-Fi" QR code on the table card. Only the admin-only QR card page sees them. You can also type them on the card page instead. | `"Venue Guest"`, `"…"`, `"WPA"` |
@@ -402,7 +402,7 @@ For very large collections (50 GB+), the free tool [rclone](https://rclone.org/s
 - **Thumbnails are made on the guest's phone** (a ~480 px JPEG, or a frame from a video) and saved to `thumbs/<id>.jpg`. The free Worker plan gives only ~10 ms of CPU per request, so the server never processes images.
 - **Download all** fetches every file in your browser and builds the zip there, streaming it straight to disk.
 - **Admin login** uses an HttpOnly cookie signed with your admin password, so nothing has to be stored.
-- **Libraries are bundled in `public/vendor`** (no outside CDNs), so the site keeps working years from now: [client-zip](https://github.com/Touffy/client-zip) for zips, [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) for the QR code, and the [Cormorant Garamond](https://github.com/CatharsisFonts/Cormorant) font.
+- **Libraries are bundled in `public/vendor`** (no outside CDNs), so the site keeps working years from now: [client-zip](https://github.com/Touffy/client-zip) for zips, [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) for the QR code, and the [Google Sans Flex](https://fonts.google.com/specimen/Google+Sans+Flex) and [Cormorant Garamond](https://github.com/CatharsisFonts/Cormorant) fonts (both SIL Open Font License).
 - Unfinished multipart uploads (a guest closed the page mid-video) are cleaned up by R2 automatically after 7 days.
 
 ### Files

@@ -1,10 +1,22 @@
 @font-face {
-  font-family: "Cormorant Garamond";
-  src: url("/vendor/fonts/cormorant-garamond-latin-400-normal.woff2") format("woff2");
-  font-weight: 400;
+  font-family: "Google Sans Flex";
+  src: url("/vendor/fonts/google-sans-flex-latin-wght-normal.woff2") format("woff2-variations"),
+       url("/vendor/fonts/google-sans-flex-latin-wght-normal.woff2") format("woff2");
+  font-weight: 1 1000;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+@font-face {
+  font-family: "Google Sans Flex";
+  src: url("/vendor/fonts/google-sans-flex-latin-ext-wght-normal.woff2") format("woff2-variations"),
+       url("/vendor/fonts/google-sans-flex-latin-ext-wght-normal.woff2") format("woff2");
+  font-weight: 1 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* Kept for the italic "&" between the names when font is "serif". */
 @font-face {
   font-family: "Cormorant Garamond";
   src: url("/vendor/fonts/cormorant-garamond-latin-400-italic.woff2") format("woff2");
@@ -12,30 +24,25 @@
   font-style: italic;
   font-display: swap;
 }
-@font-face {
-  font-family: "Cormorant Garamond";
-  src: url("/vendor/fonts/cormorant-garamond-latin-600-normal.woff2") format("woff2");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
 
 :root {
-  --bg: #fbf8f1;
+  --bg: #f8f4ee;
   --primary: #7d8f69;
-  --text: #3b3a36;
-  --accent: #b89a6e;
-  --muted: color-mix(in srgb, var(--text) 60%, var(--bg));
-  --line: color-mix(in srgb, var(--text) 14%, var(--bg));
-  --card: color-mix(in srgb, #fff 70%, var(--bg));
-  --soft: color-mix(in srgb, var(--primary) 12%, var(--bg));
-  --danger: #a4493d;
-  --display: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
-  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --radius: 4px;
-}
-.font-modern {
-  --display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --text: #1a0e08;
+  --accent: #c2410c;
+  --muted: color-mix(in srgb, var(--text) 62%, var(--bg));
+  --line: color-mix(in srgb, var(--text) 10%, var(--bg));
+  --card: color-mix(in srgb, #fff 82%, var(--bg));
+  --soft: color-mix(in srgb, var(--text) 6%, var(--bg));
+  --ink: var(--text);
+  --danger: #b42318;
+  --display: "Google Sans Flex", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: "Google Sans Flex", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Cormorant Garamond", Garamond, "Times New Roman", serif;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent), 0 12px 32px -12px color-mix(in srgb, var(--text) 18%, transparent);
+  --ease: cubic-bezier(.2, .8, .2, 1);
 }
 
 * { box-sizing: border-box; }
@@ -47,11 +54,15 @@ body {
   font-family: var(--body);
   font-size: 16px;
   line-height: 1.5;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3, .display { font-family: var(--display); font-weight: 400; line-height: 1.15; margin: 0; }
-a { color: var(--primary); }
+h1, h2, h3, .display { font-family: var(--display); font-weight: 600; line-height: 1.05; letter-spacing: -0.035em; margin: 0; }
+a { color: var(--text); text-underline-offset: 3px; }
 [hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
+/* One button family: a solid ink pill, plus a quiet outline. Both step on hover and press on click. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -59,47 +70,60 @@ a { color: var(--primary); }
   gap: 8px;
   min-height: 48px;
   padding: 0 22px;
-  border-radius: 3px;
-  border: 1px solid var(--primary);
-  background: var(--primary);
-  color: #fff;
-  font: 500 19px/1 var(--display);
-  letter-spacing: 0.03em;
+  border-radius: 999px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+  font: 600 16px/1 var(--body);
+  letter-spacing: -0.01em;
   cursor: pointer;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease), background-color .18s, color .18s;
 }
-.btn:disabled { opacity: 0.5; cursor: default; }
-.btn.ghost { background: transparent; color: var(--primary); }
-.btn.small { min-height: 36px; padding: 0 14px; font-size: 17px; }
-.btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); }
-.btn:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent); outline-offset: 2px; }
+.btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--text) 45%, transparent); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(.97); box-shadow: none; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: color-mix(in srgb, var(--ink) 22%, transparent); }
+.btn.ghost:hover:not(:disabled) { background: var(--card); }
+.btn.small { min-height: 40px; padding: 0 16px; font-size: 14px; }
+.btn.danger { background: transparent; border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--danger); }
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 50%, transparent); outline-offset: 2px; }
 
 input[type="text"], input[type="password"], input[type="url"], select {
   width: 100%;
-  min-height: 48px;
-  padding: 0 14px;
-  border-radius: 3px;
-  border: 1px solid var(--line);
+  min-height: 50px;
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--text) 14%, var(--bg));
   background: var(--card);
   color: var(--text);
   font: 16px var(--body); /* 16px stops iOS zooming in */
+  transition: border-color .15s;
 }
-label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+input[type="text"]:hover, input[type="password"]:hover, input[type="url"]:hover, select:hover { border-color: color-mix(in srgb, var(--text) 28%, var(--bg)); }
+label { display: block; font-size: 14px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
 
-.bar { height: 4px; border-radius: 0; background: var(--line); overflow: hidden; }
-.bar > i { display: block; height: 100%; width: 0; background: var(--primary); transition: width 0.2s; }
+.bar { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--ink); transition: width 0.2s; }
 
 .toast {
   position: fixed;
   left: 50%;
   bottom: 20px;
   transform: translateX(-50%);
-  background: var(--text);
+  background: var(--ink);
   color: var(--bg);
-  padding: 10px 18px;
-  border-radius: 3px;
+  padding: 12px 20px;
+  border-radius: 999px;
   font-size: 14px;
+  font-weight: 500;
   z-index: 100;
   max-width: calc(100% - 32px);
+  box-shadow: var(--shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btn:hover:not(:disabled), .btn:active:not(:disabled) { transform: none; }
 }
