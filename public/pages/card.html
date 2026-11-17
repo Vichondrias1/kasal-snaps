@@ -51,6 +51,9 @@
   .col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
   .num { font-family: var(--display); font-size: 12pt; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 5pt; }
   .num b { display: inline-block; width: 16pt; height: 16pt; line-height: 16pt; border-radius: 50%; background: var(--primary); color: #fff; font: 600 8.5pt/16pt var(--body); margin-right: 4pt; vertical-align: 1pt; }
+  /* Both labels get room for two lines, so the two codes always line up. */
+  .col .num { min-height: 2.3em; display: flex; align-items: center; justify-content: center; gap: 4pt; text-align: left; }
+  .col .num b { flex: none; margin-right: 0; vertical-align: 0; }
   .col .qr { width: 1.34in; height: 1.34in; margin: 0 auto 5pt; padding: 0.06in; }
   .small { font-size: 7.5pt; color: var(--muted); line-height: 1.35; word-break: break-word; }
   .small strong { color: var(--text); font-weight: 600; }
