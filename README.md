@@ -160,11 +160,11 @@ All your details live in **one file**: `src/config.js`. Open it in any text edit
 | Setting | What it is | Example |
 |---|---|---|
 | `coupleNames` | Big title on the page | `"Alex & Sam"` |
-| `weddingDate` | Shown under the names, exactly as you type it | `"September 18, 2027"` |
+| `weddingDay` | Your wedding day. The date under your names, the QR card, the countdown and the upload window all follow it. You can change it later on the admin page. | `"2027-09-18"` |
 | `venue` | Shown next to the date (`""` to hide) | `"The Garden Pavilion"` |
 | `welcomeMessage` | A short line for guests | `"Thank you for celebrating with us!…"` |
-| `uploadOpens` | When guests can start uploading | `"2027-09-18T12:00:00-04:00"` |
-| `uploadCloses` | When uploads stop | `"2027-09-25T23:59:59-04:00"` |
+| `uploadOpensAt` | The time uploads open on the wedding day | `"12:00"` |
+| `uploadDays` | How many days uploads stay open (until 11:59 pm on the last day) | `7` |
 | `timezone` | Your time zone, for showing dates | `"America/New_York"`, `"Asia/Manila"`, `"Europe/London"` |
 | `colors` | Background, buttons, text, and an accent for thin lines & the QR card border | ivory `#FBF8F1`, sage `#7D8F69` |
 | `font` | `"serif"` (the "&" between your names in italic serif) or `"modern"` (all sans-serif) | `"serif"` |
@@ -172,7 +172,11 @@ All your details live in **one file**: `src/config.js`. Open it in any text edit
 | `siteUrl` | Optional: the link printed on the QR card | `""` (uses the site's own address) |
 | `wifiName`, `wifiPassword`, `wifiSecurity` | Optional venue Wi-Fi, printed as a second "join the Wi-Fi" QR code on the table card. Only the admin-only QR card page sees them. You can also type them on the card page instead. | `"Venue Guest"`, `"…"`, `"WPA"` |
 
-**About the upload times:** the part after the time (`-04:00`, `+08:00`) is your time zone's offset from UTC. Manila is `+08:00`, New York is `-04:00` in summer and `-05:00` in winter, London is `+01:00` in summer. If you're not sure, search "UTC offset" plus your city and the wedding date. Outside the window, guests see "Uploads open on …" or "Uploads are closed" instead of the upload button.
+**Changing the date later:** on the admin page, click **Change date** at the top (or open **Settings & clean-up → Wedding date**), pick the new day and click **Save date**. It takes effect straight away, with no redeploy, and beats whatever is in `config.js` or `.dev.vars`. **Go back to the config date** undoes it. If you change the date after printing QR cards, the cards still work, since the link doesn't change, but the printed card shows the date as it was when you printed it.
+
+**About the upload window:** uploads open at `uploadOpensAt` on the wedding day and close at 11:59 pm `uploadDays` days later, in your `timezone`. Outside the window, guests see "Uploads open on …" (with a countdown) or "Uploads are closed" instead of the upload button.
+
+**Advanced, optional:** `weddingDate` sets the shown date text exactly (for example `"18 September 2027"`), and `uploadOpens` / `uploadCloses` set the exact window as `"2027-09-18T12:00:00-04:00"` (the part after the time is your time zone's offset from UTC). Leave them `""` to have them worked out from `weddingDay`. A date saved on the admin page replaces these too.
 
 **Header photo:** the easiest way is to leave it `""` and upload a photo later from the admin page (**Settings & clean-up → Header photo**). Or put an image file in the `public` folder (for example `public/header.jpg`) and set `headerPhoto: "/header.jpg"`.
 
@@ -334,7 +338,7 @@ Tip: to print on regular paper, choose **Save as PDF**, then print that PDF at 1
 - Venue Wi-Fi helps a lot with videos. Add the Wi-Fi code to the table cards (step 12) so guests can join in one tap.
 - Guests should keep the page open until everything finishes. The page keeps the screen awake and warns them if they try to leave. If an upload fails, it retries on its own, and they can **Tap to retry**.
 - Peek at `/admin` from your phone to watch photos arrive. Check the storage meter.
-- Guests who forget can still upload until the window closes (`uploadCloses`), from home.
+- Guests who forget can still upload until the window closes (`uploadDays` after the wedding), from home.
 
 ---
 
@@ -379,7 +383,8 @@ For very large collections (50 GB+), the free tool [rclone](https://rclone.org/s
 | Deploy error about R2 not being enabled / a payment method | Finish step 4 (turn on R2 in the dashboard). |
 | Admin login says `ADMIN_PASSWORD is not set` | Run `npx wrangler secret put ADMIN_PASSWORD` (step 9). |
 | "Wrong password" | Run `npx wrangler secret put ADMIN_PASSWORD` again to reset it. |
-| Guests see "Uploads open on …" during the wedding | Check `uploadOpens` / `uploadCloses` and their `+HH:MM` offset, then redeploy (or re-run `npm run push-secrets` for Option B). |
+| Guests see "Uploads open on …" during the wedding | On the admin page, click **Change date** and check the wedding day, the opening time and your time zone (shown in brackets). Saving there works straight away, with no redeploy. |
+| The date or upload window ignores my `config.js` change | A date saved on the admin page wins. Click **Change date → Go back to the config date**. |
 | My config changes don't show up | Run `npm run deploy`. Option B: re-run `npm run push-secrets`. A value set in the dashboard or `.dev.vars` beats `config.js`. |
 | `*.workers.dev` address doesn't load | New subdomains take a few minutes. Check **Workers & Pages → wedding-photos → Settings → Domains & Routes** that `workers.dev` is enabled. |
 | An upload keeps failing | Usually weak signal. Tap **Tap to retry** on better Wi-Fi. Files over 5 GB aren't supported. |

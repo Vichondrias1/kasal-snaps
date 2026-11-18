@@ -13,8 +13,16 @@ export default {
   // Shown as the big title on the guest page.            Override: COUPLE_NAMES
   coupleNames: "Alex & Sam",
 
-  // Shown under the names, exactly as written.           Override: WEDDING_DATE
-  weddingDate: "September 18, 2027",
+  // Your wedding day, as YYYY-MM-DD. Everything else follows from it: the date
+  // shown under your names and on the QR card, the countdown, and when guests
+  // can upload. You can also change it later on the admin page
+  // (Settings & clean-up → Wedding date) without redeploying.
+  weddingDay: "2027-09-18", //                            Override: WEDDING_DAY
+
+  // Guests can upload from this time on the wedding day…  Override: UPLOAD_OPENS_AT
+  uploadOpensAt: "12:00",
+  // …for this many days, until 11:59 pm on the last one.  Override: UPLOAD_DAYS
+  uploadDays: 7,
 
   // Shown next to the date. Leave "" to hide.            Override: VENUE
   venue: "The Garden Pavilion",
@@ -23,13 +31,15 @@ export default {
   welcomeMessage:
     "Thank you for celebrating with us! Share every photo and video you take today — we can't wait to see the day through your eyes.",
 
-  // Upload window. Guests can only upload between these two moments.
-  // Use the format YYYY-MM-DDTHH:MM:SS+HH:MM (the +HH:MM is your time zone's
-  // offset from UTC, e.g. +08:00 for Manila, -04:00 for New York in summer).
-  uploadOpens: "2027-09-18T12:00:00-04:00", //           Override: UPLOAD_OPENS
-  uploadCloses: "2027-09-25T23:59:59-04:00", //          Override: UPLOAD_CLOSES
+  // Advanced, optional. Leave "" to work these out from weddingDay above.
+  // The shown date text, e.g. "18 September 2027".       Override: WEDDING_DATE
+  weddingDate: "",
+  // Exact upload window, as YYYY-MM-DDTHH:MM:SS+HH:MM (the +HH:MM is your
+  // time zone's offset from UTC).          Override: UPLOAD_OPENS, UPLOAD_CLOSES
+  uploadOpens: "",
+  uploadCloses: "",
 
-  // Time zone used to display the dates above.           Override: TIMEZONE
+  // Your time zone, used for the upload times and dates.  Override: TIMEZONE
   // List: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   timezone: "America/New_York",
 

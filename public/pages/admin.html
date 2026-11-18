@@ -71,6 +71,15 @@
   .panel h2 { font-size: 24px; margin-bottom: 8px; }
   .panel p { margin: 4px 0 10px; font-size: 14px; color: var(--muted); }
   .guestzips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .date-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 12px; margin: 14px 0 6px; }
+  @media (max-width: 560px) { .date-grid { grid-template-columns: 1fr 1fr; } .date-grid > :first-child { grid-column: 1 / -1; } }
+  .date-grid label { margin: 0; }
+  .date-grid input, .date-grid select {
+    display: block; width: 100%; min-height: 48px; margin-top: 6px; padding: 0 14px; border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--text) 14%, var(--bg)); background: var(--bg); color: var(--text); font: 16px var(--body);
+  }
+  .date-preview { margin: 8px 0 14px; font-size: 14px; color: var(--text); }
+  .linkish { border: 0; background: none; padding: 0; margin-left: 6px; font: inherit; color: var(--primary); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   details.settings summary { cursor: pointer; font-size: 14px; color: var(--muted); margin: 18px 0 8px; }
   .lb { position: fixed; inset: 0; background: rgba(15,14,12,.94); z-index: 50; display: grid; grid-template-rows: auto 1fr auto; color: #fff; }
   .lb .bar-top, .lb .bar-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; font-size: 14px; }
@@ -109,7 +118,7 @@
     <div class="top">
       <div>
         <h1 id="title"></h1>
-        <div class="sub" id="windowInfo"></div>
+        <div class="sub"><span id="windowInfo"></span><button class="linkish" id="editDate" type="button">Change date</button></div>
       </div>
       <div class="actions">
         <a class="btn small ghost" href="/" target="_blank">Upload page ↗</a>
@@ -167,6 +176,29 @@
 
     <details class="settings">
       <summary>Settings &amp; clean-up</summary>
+      <div class="panel" id="datePanel">
+        <h2>Wedding date</h2>
+        <p id="dateInfo">Everything follows this date: the date under your names and on the QR card, the countdown, and when guests can upload.</p>
+        <div class="date-grid">
+          <label>Wedding day<input type="date" id="dateDay" required></label>
+          <label>Uploads open at<input type="time" id="dateOpens" step="60"></label>
+          <label>Open for
+            <select id="dateDays">
+              <option value="1">1 day</option>
+              <option value="2">2 days</option>
+              <option value="3">3 days</option>
+              <option value="7">7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+            </select>
+          </label>
+        </div>
+        <p class="date-preview" id="datePreview"></p>
+        <div class="actions">
+          <button class="btn small" id="dateSave" type="button">Save date</button>
+          <button class="btn small ghost" id="dateReset" type="button">Go back to the config date</button>
+        </div>
+      </div>
       <div class="panel">
         <h2>Our photos (polaroids)</h2>
         <p>Up to 12 photos of the two of you, shown as polaroids at the bottom of the guest page. Each one is shown as a square, cropped to the middle. Captions are optional and appear on the white strip.</p>
@@ -267,6 +299,10 @@ function fmt(iso, opts) {
   try { return new Intl.DateTimeFormat("en-US", { timeZone: W.timezone, ...opts }).format(new Date(iso)); }
   catch { return iso; }
 }
+function windowText() {
+  const o = { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" };
+  return `${W.weddingDate} · guest uploads open ${fmt(W.uploadOpens, o)} – ${fmt(W.uploadCloses, o)} (${W.timezone})`;
+}
 function toast(msg) {
   const t = document.createElement("div");
   t.className = "toast";
@@ -314,7 +350,7 @@ async function load() {
   $("tabPhotosN").textContent = `(${s.fileCount})`;
   $("fileL").textContent = `files · ${s.photos} photos, ${s.videos} videos`;
   $("guestN").textContent = s.guestCount;
-  $("windowInfo").textContent = `Guest uploads open ${fmt(W.uploadOpens, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} – ${fmt(W.uploadCloses, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} (${W.timezone})`;
+  $("windowInfo").textContent = windowText();
 
   const sel = $("guestFilter");
   const prev = sel.value;
@@ -665,6 +701,62 @@ function buildGuestButtons() {
     box.append(b);
   }
 }
+
+// ---------- wedding date ----------
+// The Worker works out the shown date and the upload window; this only previews them.
+const monthDay = (day, plus = 0) => {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d + plus, 12)));
+};
+const clock = (t) => {
+  const [h, m] = t.split(":").map(Number);
+  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(new Date(Date.UTC(2000, 0, 1, h, m)));
+};
+function fillDate() {
+  $("dateDay").value = W.weddingDay || "";
+  $("dateOpens").value = W.uploadOpensAt || "12:00";
+  const days = String(W.uploadDays || 7);
+  if (![...$("dateDays").options].some((o) => o.value === days)) $("dateDays").append(new Option(days + " days", days));
+  $("dateDays").value = days;
+  $("dateReset").hidden = W.dateSource !== "admin";
+  $("dateInfo").textContent = "Everything follows this date: the date under your names and on the QR card, the countdown, and when guests can upload. " +
+    (W.dateSource === "admin" ? "It was set here, so it overrides the date in your config." : "Changes here take effect straight away, with no redeploy.");
+  previewDate();
+}
+function previewDate() {
+  const day = $("dateDay").value;
+  if (!day) { $("datePreview").textContent = "Pick the wedding day."; return; }
+  const days = Number($("dateDays").value);
+  $("datePreview").textContent = `Shown as “${monthDay(day)}”. Guests can upload from ${monthDay(day)} at ${clock($("dateOpens").value || "12:00")} until ${monthDay(day, days)} at 11:59 PM (${W.timezone} time).`;
+}
+for (const id of ["dateDay", "dateOpens", "dateDays"]) $(id).addEventListener("input", previewDate);
+function applyDates(r) {
+  Object.assign(W, r);
+  fillDate();
+  $("windowInfo").textContent = windowText();
+}
+$("dateSave").onclick = async () => {
+  try {
+    const r = await api("/api/admin/date", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ weddingDay: $("dateDay").value, uploadOpensAt: $("dateOpens").value, uploadDays: Number($("dateDays").value) }),
+    });
+    applyDates(r);
+    toast("Wedding date saved. The guest page and QR card use it now.");
+  } catch (err) { toast(err.message); }
+};
+$("dateReset").onclick = async () => {
+  if (!confirm("Go back to the date in your config file?")) return;
+  try { applyDates(await api("/api/admin/date", { method: "DELETE" })); toast("Using the config date again."); }
+  catch (err) { toast(err.message); }
+};
+$("editDate").onclick = () => {
+  document.querySelector("details.settings").open = true;
+  $("datePanel").scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => $("dateDay").focus({ preventScroll: true }), 400);
+};
+fillDate();
 
 // ---------- header photo ----------
 $("headerBtn").onclick = () => $("headerFile").click();

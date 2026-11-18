@@ -363,6 +363,28 @@ await test("polaroids: admin-only upload, shown on the guest page, captions, lim
   ok(!(await (await req("/")).text()).includes("/polaroid/"), "all gone");
 });
 
+// ---------------------------------------------------------------- wedding date
+await test("wedding date: admin-only, validated, drives the shown date and the window, can be reset", async () => {
+  const put = (body, c = cookie) => req("/api/admin/date", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }, c);
+  eq((await put({ weddingDay: "2030-06-15" }, null)).status, 401, "anonymous");
+  eq((await put({ weddingDay: "2030-02-30" })).status, 400, "impossible day");
+  eq((await put({ weddingDay: "2030-06-15", uploadOpensAt: "25:00" })).status, 400, "bad time");
+  const r = await put({ weddingDay: "2030-06-15", uploadOpensAt: "14:30", uploadDays: 3 });
+  eq(r.status, 200, "save");
+  const d = await r.json();
+  eq(d.weddingDate, "June 15, 2030", "shown date");
+  eq(d.dateSource, "admin", "source");
+  ok(d.uploadOpens.startsWith("2030-06-15T14:30:00"), "opens " + d.uploadOpens);
+  ok(d.uploadCloses.startsWith("2030-06-18T23:59:59"), "closes " + d.uploadCloses);
+  const s = await (await req("/api/status")).json();
+  eq(s.opens, d.uploadOpens, "status uses it");
+  eq(s.state, "before", "window not open yet");
+  ok((await (await req("/")).text()).includes("June 15, 2030"), "guest page shows it");
+  const back = await (await req("/api/admin/date", { method: "DELETE" }, cookie)).json();
+  eq(back.dateSource, "config", "reset");
+  eq((await (await req("/api/status")).json()).opens, status.opens, "back to the config window");
+});
+
 await test("delete one file removes it and its thumbnail", async () => {
   eq((await req("/api/admin/file?key=" + encodeURIComponent(singleKey), { method: "DELETE" }, cookie)).status, 200, "delete");
   eq((await req("/api/admin/file?key=" + encodeURIComponent(singleKey), {}, cookie)).status, 404, "file gone");

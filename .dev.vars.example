@@ -9,12 +9,17 @@
 ADMIN_PASSWORD=choose-a-long-password-here
 
 COUPLE_NAMES=Alex & Sam
-WEDDING_DATE=September 18, 2027
+WEDDING_DAY=2027-09-18
+UPLOAD_OPENS_AT=12:00
+UPLOAD_DAYS=7
 VENUE=The Garden Pavilion
 WELCOME_MESSAGE=Thank you for celebrating with us! Share every photo and video you take today.
-UPLOAD_OPENS=2027-09-18T12:00:00-04:00
-UPLOAD_CLOSES=2027-09-25T23:59:59-04:00
 TIMEZONE=America/New_York
+# Advanced, optional: exact date text and upload window instead of the ones
+# worked out from WEDDING_DAY. A date saved on the admin page beats these.
+# WEDDING_DATE=18 September 2027
+# UPLOAD_OPENS=2027-09-18T12:00:00-04:00
+# UPLOAD_CLOSES=2027-09-25T23:59:59-04:00
 COLOR_BACKGROUND="#FBF8F1"
 COLOR_PRIMARY="#7D8F69"
 COLOR_TEXT="#3B3A36"

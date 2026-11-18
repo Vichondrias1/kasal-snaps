@@ -15,6 +15,8 @@ const HEADER_MAX = 15 * MiB;
 const SESSION_DAYS = 30;
 const COOKIE = "wp_admin";
 const HEADER_KEY = "site/header";
+// Wedding date chosen on the admin page. When present it beats the config.
+const SETTINGS_KEY = "site/settings.json";
 // Monogram / logo and browser icons, uploaded from the admin page.
 const BRAND = {
   logo: { key: "site/logo", path: "/logo", types: ["image/png", "image/webp", "image/jpeg"] },
@@ -68,7 +70,7 @@ async function route(request, env) {
 
   // ---- public API ----------------------------------------------------------
   if (path === "/api/status" && method === "GET") {
-    const cfg = config(env);
+    const cfg = await siteConfig(env);
     return json({ ...windowState(cfg), isAdmin: await isAdmin(request, env) });
   }
   if (path === "/api/upload" && method === "PUT") return singleUpload(request, env, url);
@@ -107,6 +109,12 @@ async function route(request, env) {
       return json({ ok: true });
     }
     if (path === "/api/admin/brand" && method === "PUT") return putBrand(request, env, url);
+    if (path === "/api/admin/date" && method === "PUT") return putDate(request, env);
+    if (path === "/api/admin/date" && method === "DELETE") {
+      await env.BUCKET.delete(SETTINGS_KEY);
+      settingsCache = { at: 0, value: null };
+      return json(publicDates(await siteConfig(env)));
+    }
     if (path === "/api/admin/brand" && method === "DELETE") {
       await env.BUCKET.delete(Object.values(BRAND).map((b) => b.key));
       return json({ ok: true });
@@ -124,6 +132,9 @@ async function route(request, env) {
 
 const OVERRIDES = {
   COUPLE_NAMES: "coupleNames",
+  WEDDING_DAY: "weddingDay",
+  UPLOAD_OPENS_AT: "uploadOpensAt",
+  UPLOAD_DAYS: "uploadDays",
   WEDDING_DATE: "weddingDate",
   VENUE: "venue",
   WELCOME_MESSAGE: "welcomeMessage",
@@ -153,7 +164,117 @@ function config(env) {
   }
   cfg.storageLimitGB = Number(cfg.storageLimitGB) || 10;
   if (cfg.font !== "modern") cfg.font = "serif";
+  // Older setups give exact upload times but no WEDDING_DAY: take the day from UPLOAD_OPENS.
+  const opensDay = String(cfg.uploadOpens || "").slice(0, 10);
+  if (!String(env.WEDDING_DAY || "").trim() && validDay(opensDay)) cfg.weddingDay = opensDay;
   return cfg;
+}
+
+// The config plus the wedding date saved on the admin page, with the shown date
+// and the upload window worked out from the wedding day where they aren't given.
+async function siteConfig(env) {
+  const cfg = config(env);
+  const saved = await savedSettings(env);
+  cfg.dateSource = "config";
+  if (saved && validDay(saved.weddingDay)) {
+    cfg.dateSource = "admin";
+    cfg.weddingDay = saved.weddingDay;
+    cfg.uploadOpensAt = saved.uploadOpensAt;
+    cfg.uploadDays = saved.uploadDays;
+    // A date picked on the admin page replaces any exact values in the config.
+    cfg.weddingDate = cfg.uploadOpens = cfg.uploadCloses = "";
+  }
+  if (!validTime(cfg.uploadOpensAt)) cfg.uploadOpensAt = "12:00";
+  cfg.uploadDays = cleanDays(cfg.uploadDays);
+  if (validDay(cfg.weddingDay)) {
+    if (!cfg.weddingDate) cfg.weddingDate = longDate(cfg.weddingDay);
+    if (!cfg.uploadOpens) cfg.uploadOpens = zonedIso(cfg.weddingDay, cfg.uploadOpensAt + ":00", cfg.timezone);
+    if (!cfg.uploadCloses) cfg.uploadCloses = zonedIso(addDays(cfg.weddingDay, cfg.uploadDays), "23:59:59", cfg.timezone);
+  }
+  return cfg;
+}
+
+// Read at most every few seconds per Worker instance, since every upload checks the window.
+let settingsCache = { at: 0, value: null };
+async function savedSettings(env) {
+  if (Date.now() - settingsCache.at < 10_000) return settingsCache.value;
+  let value = null;
+  const obj = await env.BUCKET.get(SETTINGS_KEY);
+  if (obj) {
+    try {
+      value = await obj.json();
+    } catch {
+      value = null;
+    }
+  }
+  settingsCache = { at: Date.now(), value };
+  return value;
+}
+
+function validDay(s) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return false;
+  const d = new Date(s + "T00:00:00Z");
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+const validTime = (s) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(s));
+const cleanDays = (n) => Math.min(60, Math.max(1, Math.round(Number(n)) || 7));
+
+function addDays(day, n) {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+
+// "2027-09-18" -> "September 18, 2027"
+function longDate(day) {
+  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(day + "T12:00:00Z"));
+}
+
+// How far the time zone is ahead of UTC at that moment, in ms.
+function tzOffset(utcMs, timeZone) {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(new Date(utcMs));
+    const p = Object.fromEntries(parts.map((x) => [x.type, Number(x.value)]));
+    return Date.UTC(p.year, p.month - 1, p.day, p.hour % 24, p.minute, p.second) - Math.floor(utcMs / 1000) * 1000;
+  } catch {
+    return 0; // unknown time zone: treat as UTC
+  }
+}
+
+// A wall-clock time on a day in a time zone, as "YYYY-MM-DDTHH:MM:SS+HH:MM".
+function zonedIso(day, time, timeZone) {
+  const [y, m, d] = day.split("-").map(Number);
+  const [hh, mm, ss] = time.split(":").map(Number);
+  const wall = Date.UTC(y, m - 1, d, hh, mm, ss);
+  let off = tzOffset(wall, timeZone);
+  off = tzOffset(wall - off, timeZone); // a second pass settles daylight-saving edges
+  const mins = Math.round(Math.abs(off) / 60000);
+  const two = (n) => String(n).padStart(2, "0");
+  return `${day}T${time}${off < 0 ? "-" : "+"}${two(Math.floor(mins / 60))}:${two(mins % 60)}`;
+}
+
+function publicDates(cfg) {
+  return {
+    weddingDay: cfg.weddingDay,
+    weddingDate: cfg.weddingDate,
+    uploadOpensAt: cfg.uploadOpensAt,
+    uploadDays: cfg.uploadDays,
+    uploadOpens: cfg.uploadOpens,
+    uploadCloses: cfg.uploadCloses,
+    dateSource: cfg.dateSource,
+  };
+}
+
+async function putDate(request, env) {
+  const body = await readJson(request);
+  if (!validDay(body.weddingDay)) return json({ error: "Please pick the wedding day." }, 400);
+  const at = body.uploadOpensAt === undefined || body.uploadOpensAt === "" ? "12:00" : String(body.uploadOpensAt).slice(0, 5);
+  if (!validTime(at)) return json({ error: "Please pick the time uploads open." }, 400);
+  const value = { weddingDay: body.weddingDay, uploadOpensAt: at, uploadDays: cleanDays(body.uploadDays) };
+  await env.BUCKET.put(SETTINGS_KEY, JSON.stringify(value), { httpMetadata: { contentType: "application/json" } });
+  settingsCache = { at: Date.now(), value };
+  return json(publicDates(await siteConfig(env)));
 }
 
 function windowState(cfg) {
@@ -167,12 +288,12 @@ function windowState(cfg) {
 }
 
 async function canUpload(request, env) {
-  if (windowState(config(env)).open) return true;
+  if (windowState(await siteConfig(env)).open) return true;
   return isAdmin(request, env);
 }
 
-function closedResponse(env) {
-  const w = windowState(config(env));
+async function closedResponse(env) {
+  const w = windowState(await siteConfig(env));
   const msg = w.state === "before" ? "Uploads aren't open yet." : "Uploads are closed.";
   return json({ error: msg, state: w.state }, 403);
 }
@@ -184,7 +305,7 @@ function closedResponse(env) {
 async function page(env, url, file) {
   const res = await env.ASSETS.fetch(new Request(new URL("/pages/" + file, url)));
   if (!res.ok) return new Response("Page missing: " + file, { status: 500 });
-  const cfg = config(env);
+  const cfg = await siteConfig(env);
 
   // One list call tells us which site images (header, logo, icons) exist.
   const site = {};
@@ -200,11 +321,9 @@ async function page(env, url, file) {
   const logo = ver(BRAND.logo.key, BRAND.logo.path);
   const pub = {
     coupleNames: cfg.coupleNames,
-    weddingDate: cfg.weddingDate,
+    ...publicDates(cfg),
     venue: cfg.venue,
     welcomeMessage: cfg.welcomeMessage,
-    uploadOpens: cfg.uploadOpens,
-    uploadCloses: cfg.uploadCloses,
     timezone: cfg.timezone,
     font: cfg.font,
     headerPhoto: header || "",
