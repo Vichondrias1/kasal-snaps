@@ -45,8 +45,33 @@
   #guestName[aria-invalid="true"] { border-color: var(--danger); }
   #guestName::placeholder, #noteText::placeholder { color: color-mix(in srgb, var(--text) 38%, var(--bg)); }
   .name-hint { margin: 8px 0 0; font-size: 14px; font-weight: 500; color: var(--danger); }
-  .pick { width: 100%; min-height: 58px; font-size: 17px; margin-top: 16px; }
+  .pick { width: 100%; min-height: 58px; font-size: 17px; white-space: nowrap; }
   .pick svg { width: 20px; height: 20px; }
+
+  /* Where the guest is: name, then photos, then done. */
+  .steps { display: flex; align-items: center; gap: 6px; margin: 0 0 18px; padding: 0; list-style: none; }
+  .steps li { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 4px 11px 4px 4px; border-radius: 999px; background: var(--soft); color: var(--muted); font-size: 12.5px; font-weight: 600; transition: background-color .3s, color .3s; }
+  .steps li b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--card); color: var(--text); font-size: 11px; font-weight: 700; }
+  .steps li.on { background: var(--ink); color: var(--bg); }
+  .steps li.on b { background: var(--bg); }
+  .steps li.done { color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, var(--card)); }
+  .steps li.done b { background: var(--primary); color: #fff; }
+  .steps i { flex: none; width: 10px; height: 1.5px; background: var(--line); }
+
+  /* The drop zone: a dashed card with a little fan of prints over the button. */
+  .drop { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 16px; padding: 22px 16px 18px; border: 1.5px dashed color-mix(in srgb, var(--primary) 70%, var(--bg)); border-radius: 20px; background: color-mix(in srgb, var(--soft) 55%, transparent); transition: background-color .2s, border-color .2s; }
+  .drop.over { background: color-mix(in srgb, var(--primary) 10%, var(--card)); border-color: var(--primary); }
+  .fan { position: relative; width: 150px; height: 74px; }
+  .fan i { position: absolute; top: 6px; width: 48px; height: 60px; border: 3px solid #fff; border-radius: 8px; box-shadow: 0 6px 14px -6px color-mix(in srgb, var(--text) 45%, transparent); background: center/cover no-repeat; transition: transform .35s var(--ease); }
+  .fan i:nth-child(1) { left: 18px; transform: rotate(-10deg); background-image: linear-gradient(180deg, color-mix(in srgb, var(--accent) 45%, #fff), var(--accent)); }
+  .fan i:nth-child(2) { left: 51px; top: 0; z-index: 1; background-image: linear-gradient(180deg, color-mix(in srgb, var(--text) 75%, var(--accent)), color-mix(in srgb, var(--accent) 35%, #fff)); }
+  .fan i:nth-child(3) { left: 84px; transform: rotate(10deg); background-image: linear-gradient(180deg, color-mix(in srgb, var(--primary) 35%, #fff), var(--primary)); }
+  .drop:hover .fan i:nth-child(1) { transform: rotate(-14deg) translateX(-4px); }
+  .drop:hover .fan i:nth-child(3) { transform: rotate(14deg) translateX(4px); }
+  .drop-hint { margin: 0; font-size: 13px; font-weight: 500; color: var(--muted); text-align: center; }
+  .trust { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .trust li { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 12%, var(--card)); color: var(--primary); font-size: 12.5px; font-weight: 600; }
+  .trust svg { width: 12px; height: 12px; }
 
   /* ---------- countdown: digits roll like a counter ---------- */
   .countdown { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 8px; margin: 22px 0 16px; }
@@ -61,18 +86,29 @@
   /* ---------- upload queue ---------- */
   .summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: 16px; font-weight: 500; }
   .summary b { font-weight: 650; }
+  .tot-pct { font-family: var(--display); font-size: 24px; font-weight: 620; letter-spacing: -0.04em; color: var(--primary); font-variant-numeric: tabular-nums; }
   .done-row { display: flex; align-items: center; gap: 12px; margin: 18px 0 2px; font-weight: 600; font-size: 17px; }
   .done-row svg { flex: none; width: 32px; height: 32px; padding: 7px; border-radius: 50%; background: var(--primary); color: #fff; }
-  .list { list-style: none; margin: 10px 0 0; padding: 0; }
-  .item { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
-  .item:first-child { border-top: 0; }
-  .thumb { width: 52px; height: 52px; border-radius: 12px; background: var(--soft) center/cover no-repeat; }
-  .name { font-size: 14.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 7px; }
-  .item .bar { height: 4px; }
-  .status { font-size: 12.5px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
-  .item.done .bar > i { background: var(--primary); }
-  .item.error .status { color: var(--danger); }
-  .retry { border: 0; background: none; color: var(--danger); font: 600 12.5px var(--body); text-decoration: underline; padding: 0; cursor: pointer; }
+  /* Each file is a square tile: a dimmed thumbnail with its own bar, then a tick when it's in. */
+  .list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .item { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--soft); }
+  .thumb { position: absolute; inset: 0; background: var(--soft) center/cover no-repeat; }
+  .thumb::after { content: ""; position: absolute; inset: 0; background: rgba(20, 11, 6, .45); transition: opacity .4s; }
+  .item.done .thumb::after { opacity: 0; }
+  .meta { position: absolute; left: 7px; right: 7px; bottom: 7px; }
+  .name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .item .bar { height: 4px; background: rgba(255, 255, 255, .35); }
+  .item .bar > i { background: #fff; }
+  .item.done .meta { opacity: 0; transition: opacity .3s .2s; }
+  .status { display: none; }
+  .item::after { content: ""; position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; box-sizing: border-box; background: var(--primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/12px no-repeat; transform: scale(0); transition: transform .35s cubic-bezier(.3, 1.6, .5, 1); }
+  .item.done::after { transform: scale(1); }
+  .item.error .thumb::after { background: color-mix(in srgb, var(--danger) 80%, #000); opacity: .85; }
+  .item.error .meta { top: 6px; display: flex; flex-direction: column; justify-content: center; }
+  .item.error .bar { display: none; }
+  .item.error .status { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 600; line-height: 1.2; color: #fff; text-align: center; }
+  .retry { border: 0; background: none; color: #fff; font: 700 12px var(--body); text-decoration: underline; padding: 4px; cursor: pointer; }
+  @media (min-width: 480px) { .list { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
   /* Finished uploads land on a little pile of prints. */
   .pile { position: relative; height: 150px; margin: 10px 0 0; perspective: 700px; }
@@ -168,22 +204,37 @@
   </section>
 
   <section class="panel" id="uploader" hidden>
+    <ol class="steps" id="steps" aria-label="Steps">
+      <li data-step="1"><b>1</b>Your name</li><i aria-hidden="true"></i>
+      <li data-step="2"><b>2</b>Photos</li><i aria-hidden="true"></i>
+      <li data-step="3"><b>3</b>Done</li>
+    </ol>
     <h2>Share your photos</h2>
-    <p class="lede">Photos and videos go straight to us at full quality. Long videos are fine.</p>
+    <p class="lede">Straight to us at full quality. No app, no sign-up. Long videos are fine.</p>
     <label for="guestName">Your name</label>
     <input type="text" id="guestName" autocomplete="name" maxlength="50" required aria-describedby="nameHint" placeholder="So we know who took them">
     <p class="name-hint" id="nameHint" hidden>Please add your name first.</p>
     <input type="file" id="files" accept="image/*,video/*" multiple hidden>
-    <button class="btn pick" id="pickBtn" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-      Choose photos and videos
-    </button>
+    <div class="drop" id="drop">
+      <div class="fan" id="fan" aria-hidden="true"><i></i><i></i><i></i></div>
+      <button class="btn pick" id="pickBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Choose photos &amp; videos
+      </button>
+      <p class="drop-hint">Pick as many as you like · videos welcome</p>
+    </div>
+    <ul class="trust">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Full quality</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Only we see them</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No app needed</li>
+    </ul>
   </section>
 
   <section class="panel" id="queue" hidden>
     <div class="summary">
       <span id="summaryText"></span>
       <button class="btn small ghost" id="retryAll" type="button" hidden>Retry failed</button>
+      <b class="tot-pct" id="totalPct" aria-hidden="true"></b>
     </div>
     <div class="bar"><i id="totalBar"></i></div>
     <p class="done-row" id="thanks" hidden>
@@ -459,6 +510,36 @@ $("pickBtn").addEventListener("click", () => {
   if (!needName()) $("files").click();
 });
 
+// The fan over the button shows the couple's own photos when they've added some.
+(Array.isArray(W.polaroids) ? W.polaroids : []).slice(0, 3).forEach((p, i) => {
+  $("fan").children[i].style.backgroundImage = `url("${p.src}")`;
+});
+
+// Files can also be dragged onto the drop zone on a computer.
+const drop = $("drop");
+drop.addEventListener("dragover", (e) => { if (e.dataTransfer?.types?.includes("Files")) { e.preventDefault(); drop.classList.add("over"); } });
+drop.addEventListener("dragleave", (e) => { if (!drop.contains(e.relatedTarget)) drop.classList.remove("over"); });
+drop.addEventListener("drop", (e) => {
+  e.preventDefault();
+  drop.classList.remove("over");
+  const list = [...(e.dataTransfer?.files || [])].filter((f) => /^(image|video)\//.test(f.type) || !f.type);
+  if (list.length) addFiles(list);
+});
+
+// Step 1 until there's a name, step 2 while choosing and sending, all ticked when it's all in.
+function setStep() {
+  const done = items.length > 0 && items.every((i) => i.state === "done");
+  const step = done ? 4 : $("guestName").value.trim() ? 2 : 1;
+  for (const li of $("steps").querySelectorAll("li")) {
+    const n = Number(li.dataset.step);
+    li.classList.toggle("on", n === step);
+    li.classList.toggle("done", n < step);
+    if (n === step) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+  }
+}
+$("guestName").addEventListener("input", setStep);
+setStep();
+
 // ---------- message ----------
 $("noteForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -499,13 +580,17 @@ $("guestName").addEventListener("input", () => {
   $("guestName").removeAttribute("aria-invalid");
 });
 $("files").addEventListener("change", (e) => {
-  const guest = $("guestName").value.trim();
-  if (!guest) { e.target.value = ""; needName(); return; }
-  try { localStorage.setItem(NAME_KEY, guest); } catch {}
-  for (const file of e.target.files) addItem(file, guest);
+  const list = [...e.target.files];
   e.target.value = "";
-  pump();
+  addFiles(list);
 });
+function addFiles(list) {
+  const guest = $("guestName").value.trim();
+  if (!guest) { needName(); return; }
+  try { localStorage.setItem(NAME_KEY, guest); } catch {}
+  for (const file of list) addItem(file, guest);
+  pump();
+}
 $("retryAll").addEventListener("click", () => {
   for (const it of items) if (it.state === "error") retry(it);
 });
@@ -513,8 +598,9 @@ $("retryAll").addEventListener("click", () => {
 function addItem(file, guest) {
   const li = document.createElement("li");
   li.className = "item";
+  li.title = file.name;
   li.innerHTML = `<div class="thumb"></div>
-    <div><div class="name"></div><div class="bar"><i></i></div>
+    <div class="meta"><div class="name"></div><div class="bar"><i></i></div>
     <div class="status"><span class="msg">Waiting…</span><span class="pct"></span></div></div>`;
   li.querySelector(".name").textContent = file.name;
   $("list").prepend(li);
@@ -745,7 +831,9 @@ function renderTotals() {
     rafPending = false;
     let total = 0, sent = 0;
     for (const it of items) { total += it.file.size; sent += it.state === "done" ? it.file.size : it.sent; }
-    $("totalBar").style.width = (total ? (sent / total) * 100 : 0) + "%";
+    const pct = total ? (sent / total) * 100 : 0;
+    $("totalBar").style.width = pct + "%";
+    $("totalPct").textContent = Math.floor(pct) + "%";
   });
 }
 function render() {
@@ -759,6 +847,8 @@ function render() {
   const allDone = !!items.length && done === items.length;
   if (allDone && $("thanks").hidden) burst();
   $("thanks").hidden = !allDone;
+  $("totalPct").hidden = allDone || !active;
+  setStep();
   $("queue").classList.toggle("busy", active > 0);
   for (const it of items) if (it.state === "done") it.li.querySelector(".bar > i").style.width = "100%";
   renderTotals();

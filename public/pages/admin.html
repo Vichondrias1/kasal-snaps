@@ -77,7 +77,6 @@
   @media (max-width: 560px) {
     .topbar #refreshBtn { display: none; }
     .stats { gap: 10px; }
-    .stats #storageStat { grid-column: 1 / -1; }
     .stat { padding: 14px 16px; }
     .stat .n { font-size: 28px; }
     .panel { padding: 18px 16px; border-radius: 18px; }
@@ -116,10 +115,10 @@
   /* ---------- overview ---------- */
   .ov { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
   .ov > .panel { margin: 0; }
+  .ov-chart { grid-column: span 7; }
   .ov-window { grid-column: span 5; }
   .ov-recent { grid-column: span 7; }
-  .ov-msgs { grid-column: span 7; }
-  .ov-guests { grid-column: span 5; }
+  .ov-msgs { grid-column: span 5; }
   @media (max-width: 1100px) { .ov > .panel { grid-column: 1 / -1; } }
   .pill { display: inline-flex; align-items: center; gap: 7px; min-height: 28px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--soft); }
   .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
@@ -128,7 +127,48 @@
   .big { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 6px; }
   .big b { font-size: 56px; font-weight: 640; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
   .big span { font-size: 15px; color: var(--muted); }
-  .ov-window #windowInfo { margin: 6px 0 14px; }
+  .ov-date { font-family: var(--display); font-size: 30px; font-weight: 620; letter-spacing: -0.04em; line-height: 1.1; margin: 4px 0 14px; }
+  .cd { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; }
+  .cd div { padding: 12px 4px 10px; border-radius: 14px; background: var(--soft); text-align: center; }
+  .cd b { display: block; font-family: var(--display); font-size: 26px; font-weight: 620; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .cd small { display: block; margin-top: 6px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
+  .win-rows { margin: 0 0 16px; padding: 0; }
+  .win-rows div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .win-rows dt { color: var(--muted); }
+  .win-rows dd { margin: 0; font-weight: 600; text-align: right; }
+  .pill.wait { background: color-mix(in srgb, var(--accent) 12%, var(--card)); color: var(--accent); }
+  .pill.wait::before { background: var(--accent); }
+
+  /* Uploads through the busiest day, by hour. */
+  .chart { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; align-items: end; height: 190px; margin-top: 8px; }
+  .chart .col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; height: 100%; min-width: 0; }
+  .chart .b { width: 100%; max-width: 34px; min-height: 4px; border-radius: 8px 8px 3px 3px; background: color-mix(in srgb, var(--primary) 50%, var(--card)); transition: height .6s var(--ease); }
+  .chart .col.peak .b { background: var(--accent); }
+  .chart .col small { font-size: 11.5px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+  .chart .col:hover .b { background: var(--primary); }
+  .chart .col.peak:hover .b { background: var(--accent); }
+  .chart-sub { margin: -8px 0 0 !important; }
+  @media (max-width: 560px) { .chart { gap: 4px; height: 150px; } .chart .col small { font-size: 10px; } .chart .col:nth-child(even) small { visibility: hidden; } }
+
+  /* Per-guest chips above the newest uploads. */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 14px; }
+  .chip-g { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: 600 13px var(--body); cursor: pointer; transition: background-color .15s, border-color .15s; }
+  .chip-g span { color: var(--muted); font-weight: 500; }
+  .chip-g:hover { border-color: color-mix(in srgb, var(--text) 30%, var(--bg)); }
+  .chip-g.all { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .chip-g.all span { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+
+  /* Storage meter in the side menu. */
+  .side-store { margin: 0 4px 10px; padding: 12px 14px 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .side-store .row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+  .side-store .row b { font-weight: 600; }
+  .side-store .row span { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .side-store .bar { height: 6px; margin: 8px 0 6px; }
+  .side-store .bar > i { background: var(--primary); }
+  .side-store small { display: block; font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .side-store.warn .bar > i { background: #c08a2d; }
+  .side-store.over .bar > i { background: var(--danger); }
+  .side-store.over small { color: var(--danger); }
   .mini-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
   .mini-grid .tile { border-radius: 12px; }
   .ov-msg { padding: 12px 0; border-top: 1px solid var(--line); }
@@ -277,6 +317,11 @@
       </a>
     </nav>
     <div class="side-foot">
+      <div class="side-store" id="storageStat">
+        <div class="row"><b>Storage</b><span id="storageN">—</span></div>
+        <div class="bar"><i id="storageBar"></i></div>
+        <small id="storageL">of free storage used</small>
+      </div>
       <a class="nav-item" href="/" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></svg>
         View guest page
@@ -308,31 +353,42 @@
       <!-- Overview -->
       <section class="page" id="page-overview">
         <div class="stats">
-          <div class="stat" id="storageStat">
-            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Storage</div>
-            <div class="n" id="storageN">—</div>
-            <div class="bar"><i id="storageBar"></i></div>
-            <div class="l" id="storageL">of free storage used</div>
-          </div>
           <a class="stat" href="#photos">
-            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 15.5l-5-5L6.5 20"/></svg>Files</div>
+            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 15.5l-5-5L6.5 20"/></svg>Photos &amp; videos</div>
             <div class="n" id="fileN">—</div><div class="l" id="fileL">files</div>
           </a>
           <a class="stat" href="#guests">
             <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/></svg>Guests</div>
-            <div class="n" id="guestN">—</div><div class="l">shared photos or videos</div>
+            <div class="n" id="guestN">—</div><div class="l" id="guestL">shared photos or videos</div>
           </a>
           <a class="stat" href="#messages" id="msgStat">
             <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4z"/></svg>Messages</div>
             <div class="n" id="msgN">—</div><div class="l" id="msgL">written by guests</div>
           </a>
+          <a class="stat" href="#photos" id="videoStat">
+            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="13" height="14" rx="3"/><path d="M16 10l5-3v10l-5-3"/></svg>Videos</div>
+            <div class="n" id="videoN">—</div><div class="l" id="videoL">videos</div>
+          </a>
         </div>
 
         <div class="ov">
+          <div class="panel ov-chart">
+            <div class="panel-head"><h2>Uploads through the day</h2><span class="pill open" id="chartPill" hidden></span></div>
+            <p class="chart-sub" id="chartSub"></p>
+            <div class="chart" id="chart" role="img"></div>
+            <p class="empty-sm" id="chartEmpty" hidden>Once guests start uploading, you'll see when the photos came in, hour by hour.</p>
+          </div>
           <div class="panel ov-window">
-            <div class="panel-head"><h2>Upload window</h2><span class="pill" id="ovPill"></span></div>
-            <div class="big" id="ovBig"></div>
-            <p id="windowInfo"></p>
+            <div class="panel-head"><h2>Wedding date</h2><span class="pill" id="ovPill"></span></div>
+            <div class="ov-date" id="ovDate"></div>
+            <div class="cd" id="ovCd" hidden>
+              <div><b id="cdD">0</b><small>days</small></div>
+              <div><b id="cdH">00</b><small>hours</small></div>
+              <div><b id="cdM">00</b><small>min</small></div>
+              <div><b id="cdS">00</b><small>sec</small></div>
+            </div>
+            <div class="big" id="ovBig" hidden></div>
+            <dl class="win-rows" id="windowInfo"></dl>
             <div class="actions">
               <button class="btn small ghost" id="editDate" type="button">Change date</button>
               <a class="btn small ghost" href="/admin/card" target="_blank" rel="noopener">Print QR card</a>
@@ -340,6 +396,7 @@
           </div>
           <div class="panel ov-recent">
             <div class="panel-head"><h2>Newest uploads</h2><a class="see" href="#photos">See all</a></div>
+            <div class="chips" id="ovChips"></div>
             <div class="mini-grid" id="ovRecent"></div>
             <p class="empty-sm" id="ovRecentEmpty" hidden>No uploads yet. They'll show up here as guests share them.</p>
           </div>
@@ -347,11 +404,6 @@
             <div class="panel-head"><h2>Newest messages</h2><a class="see" href="#messages">See all</a></div>
             <div id="ovMsgs"></div>
             <p class="empty-sm" id="ovMsgsEmpty" hidden>No messages yet.</p>
-          </div>
-          <div class="panel ov-guests">
-            <div class="panel-head"><h2>Top guests</h2><a class="see" href="#guests">See all</a></div>
-            <ol class="rank" id="ovGuests"></ol>
-            <p class="empty-sm" id="ovGuestsEmpty" hidden>No guests have uploaded yet.</p>
           </div>
         </div>
       </section>
@@ -578,8 +630,16 @@ async function load() {
   $("storageStat").classList.toggle("over", pct >= 1);
   $("fileN").textContent = s.fileCount;
   $("navPhotosN").textContent = s.fileCount || "";
-  $("fileL").textContent = `${s.photos} photos · ${s.videos} videos`;
+  // "Today" is the calendar day in the wedding's time zone.
+  const today = dayKey(new Date());
+  const todays = files.filter((f) => dayKey(f.uploadedAt) === today);
+  $("fileL").textContent = todays.length ? `+${todays.length} today · ${s.photos} photos` : `${s.photos} photos`;
   $("guestN").textContent = s.guestCount;
+  const newGuests = new Set(todays.map((f) => f.guest)).size;
+  $("guestL").textContent = newGuests ? `${newGuests} shared today` : "shared photos or videos";
+  const vids = files.filter(isVideo);
+  $("videoN").textContent = s.videos;
+  $("videoL").textContent = vids.length ? bytes(vids.reduce((a, f) => a + f.size, 0)) + " of video" : "no videos yet";
   $("navGuestN").textContent = s.guestCount || "";
   renderWindow();
 
@@ -600,6 +660,7 @@ async function load() {
   sideBrand();
   renderGrid();
   renderRecent();
+  renderChart();
   renderGuests();
   loadMessages();
 }
@@ -644,17 +705,43 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("light
 $("side").addEventListener("click", (e) => { if (e.target.closest("a[href^='#']")) closeMenu(); });
 
 // ---------- overview ----------
+function dayKey(d) { return fmt(d, { year: "numeric", month: "2-digit", day: "2-digit" }); }
+var cdTimer = 0;
 function renderWindow() {
-  $("windowInfo").textContent = windowText();
+  const o = { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" };
+  const rows = [["Uploads open", fmt(W.uploadOpens, o)], ["Uploads close", fmt(W.uploadCloses, o)], ["Time zone", W.timezone]];
+  const dl = $("windowInfo");
+  dl.innerHTML = "";
+  for (const [k, v] of rows) {
+    const d = document.createElement("div");
+    d.append(Object.assign(document.createElement("dt"), { textContent: k }), Object.assign(document.createElement("dd"), { textContent: v }));
+    dl.append(d);
+  }
+  $("ovDate").textContent = W.weddingDate || "";
   const now = Date.now(), opens = Date.parse(W.uploadOpens), closes = Date.parse(W.uploadCloses);
   const pill = $("ovPill"), big = $("ovBig");
   big.innerHTML = "";
+  clearInterval(cdTimer);
+  const before = now < opens;
+  $("ovCd").hidden = !before;
+  big.hidden = before;
+  if (before) {
+    pill.className = "pill wait"; pill.textContent = "Not open yet";
+    // A live countdown to the moment guests can upload.
+    const tick = () => {
+      const left = Math.max(0, Math.floor((opens - Date.now()) / 1000));
+      $("cdD").textContent = Math.floor(left / 86400);
+      $("cdH").textContent = String(Math.floor((left % 86400) / 3600)).padStart(2, "0");
+      $("cdM").textContent = String(Math.floor((left % 3600) / 60)).padStart(2, "0");
+      $("cdS").textContent = String(left % 60).padStart(2, "0");
+      if (!left) renderWindow();
+    };
+    tick();
+    cdTimer = setInterval(tick, 1000);
+    return;
+  }
   const n = document.createElement("b"), t = document.createElement("span");
-  if (now < opens) {
-    const days = Math.ceil((opens - now) / 864e5);
-    pill.className = "pill"; pill.textContent = "Not open yet";
-    n.textContent = days; t.textContent = days === 1 ? "day until guests can upload" : "days until guests can upload";
-  } else if (!(now >= closes)) {
+  if (!(now >= closes)) {
     const left = Math.max(1, Math.ceil((closes - now) / 864e5));
     pill.className = "pill open"; pill.textContent = "Open now";
     n.textContent = left; t.textContent = left === 1 ? "day left for uploads" : "days left for uploads";
@@ -663,6 +750,46 @@ function renderWindow() {
     n.textContent = files.length; t.textContent = files.length === 1 ? "file collected" : "files collected";
   }
   big.append(n, t);
+}
+
+// Uploads per hour on the busiest day so far.
+function renderChart() {
+  const box = $("chart");
+  box.innerHTML = "";
+  const byDay = new Map();
+  for (const f of files) {
+    const k = dayKey(f.uploadedAt);
+    if (!byDay.has(k)) byDay.set(k, []);
+    byDay.get(k).push(f);
+  }
+  const busiest = [...byDay.values()].sort((a, b) => b.length - a.length)[0];
+  $("chartEmpty").hidden = !!busiest;
+  box.hidden = !busiest;
+  $("chartPill").hidden = !busiest;
+  $("chartSub").hidden = !busiest;
+  if (!busiest) return;
+  const hours = new Array(24).fill(0);
+  for (const f of busiest) hours[Number(fmt(f.uploadedAt, { hour: "numeric", hourCycle: "h23" })) % 24]++;
+  // Show the hours that had uploads, at least eight of them, ending at the last busy hour.
+  let first = hours.findIndex((n) => n > 0), last = 23 - [...hours].reverse().findIndex((n) => n > 0);
+  while (last - first < 7) { if (first > 0) first--; else if (last < 23) last++; else break; if (last - first < 7 && last < 23) last++; }
+  const peak = Math.max(...hours);
+  const peakHour = hours.indexOf(peak);
+  const label = (h) => (h % 12 || 12) + (h < 12 ? "a" : "p");
+  const long = (h) => (h % 12 || 12) + (h < 12 ? " AM" : " PM");
+  for (let h = first; h <= last; h++) {
+    const col = document.createElement("div");
+    col.className = "col" + (h === peakHour ? " peak" : "");
+    col.title = `${long(h)}: ${hours[h]} ${hours[h] === 1 ? "file" : "files"}`;
+    const b = document.createElement("div");
+    b.className = "b";
+    b.style.height = `calc(${(hours[h] / peak) * 100}% - 26px)`;
+    col.append(b, Object.assign(document.createElement("small"), { textContent: label(h) }));
+    box.append(col);
+  }
+  $("chartPill").textContent = `Peak ${long(peakHour)} · ${peak} ${peak === 1 ? "file" : "files"}`;
+  $("chartSub").textContent = (byDay.size > 1 ? "Busiest day: " : "") + fmt(busiest[0].uploadedAt, { weekday: "long", month: "long", day: "numeric" }) + ` · ${busiest.length} ${busiest.length === 1 ? "file" : "files"}`;
+  box.setAttribute("aria-label", `Uploads by hour. The busiest hour was ${long(peakHour)} with ${peak}.`);
 }
 function renderRecent() {
   const box = $("ovRecent");
@@ -678,27 +805,28 @@ function renderRecent() {
     location.hash = "#photos";
     openLightbox(shown.indexOf(f));
   })));
-  // Top guests by number of files.
-  const rank = $("ovGuests");
-  rank.innerHTML = "";
-  const top = guestGroups().slice(0, 5);
-  $("ovGuestsEmpty").hidden = top.length > 0;
-  const most = top.length ? top[0].list.length : 1;
-  for (const g of top) {
-    const li = document.createElement("li");
-    const who = document.createElement("span");
-    who.className = "who";
-    who.textContent = guestLabel(g.guest);
-    const n = document.createElement("span");
-    n.className = "n";
-    n.textContent = g.list.length === 1 ? "1 file" : g.list.length + " files";
-    const bar = document.createElement("div");
-    bar.className = "bar";
-    const fill = document.createElement("i");
-    fill.style.width = (g.list.length / most) * 100 + "%";
-    bar.append(fill);
-    li.append(avatar(g.guest), who, n, bar);
-    rank.append(li);
+  // The guests who shared the most, as chips that open their photos.
+  const chips = $("ovChips");
+  chips.innerHTML = "";
+  const groups = guestGroups();
+  chips.hidden = !groups.length;
+  const chip = (text, n, value, all) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip-g" + (all ? " all" : "");
+    b.append(text, Object.assign(document.createElement("span"), { textContent: n }));
+    b.onclick = () => { $("guestFilter").value = value; $("typeFilter").value = ""; renderGrid(); location.hash = "#photos"; };
+    chips.append(b);
+  };
+  if (groups.length) chip("All", files.length, "\u0000all", true);
+  for (const g of groups.slice(0, 5)) chip(guestLabel(g.guest), g.list.length, g.guest);
+  if (groups.length > 5) {
+    const more = document.createElement("a");
+    more.className = "chip-g";
+    more.href = "#guests";
+    more.textContent = `+${groups.length - 5} more`;
+    more.style.textDecoration = "none";
+    chips.append(more);
   }
 }
 function renderOverviewMessages() {
