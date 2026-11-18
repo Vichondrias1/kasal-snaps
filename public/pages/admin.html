@@ -8,57 +8,185 @@
 <link rel="stylesheet" href="/app.css">
 <!--WEDDING-->
 <style>
-  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 60px; }
-  .login { max-width: 360px; margin: 12vh auto 0; text-align: center; }
+  /* ---------- login ---------- */
+  .login { max-width: 360px; margin: 14vh auto 0; padding: 0 16px; text-align: center; }
   .login h1 { font-size: 40px; margin-bottom: 4px; }
   .login-logo { display: block; width: 170px; height: auto; margin: -6vh auto 6px; }
-  .brand-preview { display: block; width: 120px; height: auto; margin: 4px 0 12px; }
   .login p { color: var(--muted); margin: 0 0 22px; }
   .login form { display: grid; gap: 12px; }
   .err { color: var(--danger); font-size: 14px; min-height: 20px; }
-  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-  .top h1 { font-size: 38px; }
-  .top .sub { color: var(--muted); font-size: 14px; }
-  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
-  .stat .n { font-family: var(--display); font-size: 34px; font-weight: 620; letter-spacing: -0.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .stat .l { font-size: 13px; color: var(--muted); }
-  .stat.storage { grid-column: span 2; }
-  @media (max-width: 420px) { .stat.storage { grid-column: span 1; } }
-  .stat .bar { margin-top: 10px; height: 8px; }
+
+  /* ---------- shell: side menu + content ---------- */
+  .app { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+  .side {
+    position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 4px; padding: 20px 14px calc(16px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--card) 60%, var(--bg)); border-right: 1px solid var(--line);
+  }
+  .side-head { display: flex; align-items: center; gap: 12px; padding: 4px 8px 18px; }
+  .side-head img { width: 44px; height: 44px; object-fit: contain; border-radius: 12px; background: var(--card); padding: 4px; box-shadow: var(--shadow); }
+  .side-head .mark { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--ink); color: var(--bg); font-weight: 650; font-size: 17px; letter-spacing: -0.02em; }
+  .side-head b { display: block; font-size: 17px; font-weight: 650; letter-spacing: -0.025em; line-height: 1.15; }
+  .side-head small { font-size: 12.5px; color: var(--muted); }
+  .side nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { margin: 16px 10px 6px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; min-height: 42px; padding: 0 10px; border-radius: 12px;
+    color: color-mix(in srgb, var(--text) 78%, var(--bg)); font: 500 15px var(--body); text-decoration: none; border: 0; background: none; cursor: pointer; text-align: left; width: 100%;
+    transition: background-color .15s, color .15s;
+  }
+  .nav-item svg { width: 19px; height: 19px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav-item:hover { background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); }
+  .nav-item[aria-current="page"] { background: var(--card); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 12%, transparent); }
+  .nav-item[aria-current="page"] svg { color: var(--primary); }
+  .nav-n { margin-left: auto; min-width: 24px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--text) 7%, transparent); font-size: 12px; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+  .nav-n:empty { display: none; }
+  .nav-item .ext { margin-left: auto; font-size: 13px; color: var(--muted); }
+  .side-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+  .scrim { position: fixed; inset: 0; z-index: 39; background: color-mix(in srgb, var(--text) 35%, transparent); }
+
+  .content { min-width: 0; }
+  .topbar {
+    position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: calc(14px + env(safe-area-inset-top)) 28px 14px; background: color-mix(in srgb, var(--bg) 88%, transparent);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  }
+  .topbar h1 { font-size: 28px; }
+  .topbar .sub { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+  .topbar .actions { margin-left: auto; }
+  .menu-btn { display: none; width: 44px; height: 44px; place-items: center; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
+  .menu-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+  main { max-width: 1240px; padding: 24px 28px 64px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  @media (max-width: 960px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .side { position: fixed; left: 0; top: 0; bottom: 0; z-index: 40; width: min(300px, 86vw); transform: translateX(-102%); transition: transform .28s var(--ease); box-shadow: none; background: var(--bg); }
+    .side.open { transform: none; box-shadow: 0 0 60px rgba(0, 0, 0, .25); }
+    .menu-btn { display: grid; }
+    .topbar { padding: calc(10px + env(safe-area-inset-top)) 16px 10px; gap: 12px; }
+    .topbar h1 { font-size: 22px; }
+    .topbar .sub { display: none; }
+    .topbar .actions .btn { min-height: 38px; padding: 0 12px; font-size: 13px; }
+    main { padding: 18px 16px 56px; }
+  }
+  /* The title gives way (with "…") before the buttons ever wrap or push past the screen. */
+  .topbar > div:not(.actions) { flex: 1; min-width: 0; }
+  .topbar h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 960px) { .topbar { flex-wrap: nowrap; } .topbar .actions { flex-wrap: nowrap; flex: none; } }
+  @media (max-width: 560px) {
+    .topbar #refreshBtn { display: none; }
+    .stats { gap: 10px; }
+    .stats #storageStat { grid-column: 1 / -1; }
+    .stat { padding: 14px 16px; }
+    .stat .n { font-size: 28px; }
+    .panel { padding: 18px 16px; border-radius: 18px; }
+    .big b { font-size: 46px; }
+    .toolbar select { flex: 1 1 100%; min-width: 0; }
+  }
+  .stat, .stat .n { min-width: 0; overflow-wrap: anywhere; }
+  .toolbar select { max-width: 100%; }
+  .date-grid input, .date-grid select { min-width: 0; max-width: 100%; }
+  @media (prefers-reduced-motion: reduce) { .side { transition: none; } }
+
+  /* ---------- cards ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat { display: block; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); color: inherit; text-decoration: none; }
+  .stat .k { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 10px; }
+  .stat .k svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .stat .n { font-family: var(--display); font-size: 36px; font-weight: 620; letter-spacing: -0.045em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .stat .bar { margin-top: 12px; height: 8px; }
   .stat.warn .bar > i { background: #c08a2d; }
   .stat.over .bar > i { background: var(--danger); }
-  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0 14px; }
-  .toolbar select { width: auto; min-width: 200px; min-height: 40px; }
-  .toolbar .count { color: var(--muted); font-size: 14px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-  @media (max-width: 480px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 4px; } }
-  .tile { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--soft); cursor: pointer; border: 0; padding: 0; }
+  a.stat { transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
+  a.stat:hover { transform: translateY(-2px); }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 22px; margin-bottom: 14px; min-width: 0; }
+  .panel h2 { font-size: 20px; letter-spacing: -0.03em; margin-bottom: 8px; }
+  .panel p { margin: 4px 0 12px; font-size: 14px; color: var(--muted); }
+  .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .panel-head h2 { margin: 0; }
+  .see { font-size: 13.5px; font-weight: 600; color: var(--muted); text-decoration: none; }
+  .see:hover { color: var(--text); text-decoration: underline; }
+  .empty-sm { margin: 0; font-size: 14px; color: var(--muted); }
+  .panel.danger { border-color: color-mix(in srgb, var(--danger) 30%, var(--line)); }
+
+  /* ---------- overview ---------- */
+  .ov { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+  .ov > .panel { margin: 0; }
+  .ov-window { grid-column: span 5; }
+  .ov-recent { grid-column: span 7; }
+  .ov-msgs { grid-column: span 7; }
+  .ov-guests { grid-column: span 5; }
+  @media (max-width: 1100px) { .ov > .panel { grid-column: 1 / -1; } }
+  .pill { display: inline-flex; align-items: center; gap: 7px; min-height: 28px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--soft); }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pill.open { background: color-mix(in srgb, var(--primary) 14%, var(--card)); color: var(--primary); }
+  .pill.open::before { background: var(--primary); }
+  .big { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 6px; }
+  .big b { font-size: 56px; font-weight: 640; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .big span { font-size: 15px; color: var(--muted); }
+  .ov-window #windowInfo { margin: 6px 0 14px; }
+  .mini-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .mini-grid .tile { border-radius: 12px; }
+  .ov-msg { padding: 12px 0; border-top: 1px solid var(--line); }
+  .ov-msg:first-child { border-top: 0; padding-top: 0; }
+  .ov-msg p { margin: 0 0 6px; font-size: 15px; color: var(--text); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .ov-msg small { font-size: 12.5px; color: var(--muted); }
+  .ov-msg small b { color: var(--text); font-weight: 600; }
+  .rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .rank li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 14.5px; }
+  .rank .bar { grid-column: 2 / -1; height: 5px; margin-top: -6px; }
+  .rank .bar > i { background: var(--primary); }
+  .rank .who { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank .n { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--primary) 16%, var(--card)); color: var(--primary); font-size: 13px; font-weight: 650; }
+
+  /* ---------- photos ---------- */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 16px; }
+  .toolbar select { width: auto; min-width: 200px; min-height: 42px; }
+  .count { color: var(--muted); font-size: 14px; align-self: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  @media (max-width: 480px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 4px; } .grid .tile { border-radius: 8px; } }
+  .tile { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: var(--soft); cursor: pointer; border: 0; padding: 0; }
   .tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s var(--ease); }
   .tile:hover img { transform: scale(1.03); }
   .tile .ph { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 8px; font-size: 12px; color: var(--muted); word-break: break-all; }
   .tile .badge { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 999px; }
-  .tile .who { position: absolute; left: 0; right: 0; top: 0; padding: 4px 7px; font-size: 11px; color: #fff; background: linear-gradient(rgba(0,0,0,.55), transparent); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .who { position: absolute; left: 0; right: 0; top: 0; padding: 5px 8px; font-size: 11px; color: #fff; background: linear-gradient(rgba(0,0,0,.55), transparent); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .empty { text-align: center; color: var(--muted); padding: 60px 0; }
-  .stat-link { color: inherit; text-align: left; font: inherit; cursor: pointer; }
-  .stat-link { transition: transform .18s var(--ease); }
-  .stat-link:hover { transform: translateY(-2px); }
-  .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--soft); margin: 6px 0 16px; }
-  .tab { border: 0; background: none; min-height: 40px; padding: 0 18px; border-radius: 999px; font: 600 15px/1 var(--body); color: var(--muted); cursor: pointer; transition: background-color .15s, color .15s; }
-  .tab:hover { color: var(--text); }
-  .tab span { font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 2px; }
-  .tab[aria-selected="true"] { color: var(--text); background: var(--card); box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 14%, transparent); }
-  .tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  .msg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 14px; min-height: 36px; }
-  .msg-head .count { color: var(--muted); font-size: 14px; }
-  .msg-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+
+  /* ---------- messages ---------- */
+  .msg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; min-height: 36px; }
+  .msg-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
   .msg { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px 12px; display: flex; flex-direction: column; }
   .msg p { margin: 0 0 14px; font-size: 16.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; flex: 1; }
   .msg footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
   .msg footer b { color: var(--text); font-weight: 600; }
-  .msg .del { border: 0; background: none; color: var(--danger); font: 500 13px var(--body); cursor: pointer; padding: 4px 0; }
-  .messages .empty { padding: 30px 0; }
+  .msg .del { border: 0; background: none; color: var(--danger); font: 500 13px var(--body); cursor: pointer; padding: 4px 0; min-height: 32px; }
+
+  /* ---------- guests ---------- */
+  .guest-list { list-style: none; margin: 0; padding: 0; background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+  .guest-row { display: grid; grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1fr) 90px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 18px; border-top: 1px solid var(--line); font-size: 14px; }
+  .guest-row:first-child { border-top: 0; }
+  .guest-row.head { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); padding-top: 12px; padding-bottom: 12px; background: color-mix(in srgb, var(--text) 3%, var(--card)); }
+  .guest-row .avatar { width: 40px; height: 40px; font-size: 15px; }
+  .guest-row .who { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .guest-row .dim { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .guest-row .actions { justify-content: flex-end; }
+  @media (max-width: 760px) {
+    .guest-row { grid-template-columns: 40px minmax(0, 1fr); row-gap: 4px; }
+    .guest-row.head { display: none; }
+    .guest-row > :nth-child(3), .guest-row > :nth-child(4), .guest-row > :nth-child(5) { grid-column: 2; }
+    .guest-row > .avatar { grid-row: span 4; align-self: start; }
+    .guest-row .actions { grid-column: 2; justify-content: flex-start; margin-top: 6px; }
+  }
+
+  /* ---------- set-up pages ---------- */
+  .setup { max-width: 760px; }
+  .brand-preview { display: block; width: 120px; height: auto; margin: 4px 0 12px; }
   .pol-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin: 6px 0 14px; }
   .pol-list:empty { display: none; }
   .pol { background: #fffdf9; border-radius: 6px; padding: 7px 7px 8px; box-shadow: 0 1px 2px rgba(0,0,0,.15), 0 4px 10px rgba(0,0,0,.08); display: grid; gap: 6px; }
@@ -66,11 +194,6 @@
   .pol input { min-height: 34px; font-size: 14px; padding: 0 8px; }
   .pol .row { display: flex; justify-content: flex-end; }
   .pol .row button { border: 0; background: none; padding: 2px 0; font: 500 13px var(--body); cursor: pointer; color: var(--danger); }
-  .count { color: var(--muted); font-size: 14px; align-self: center; }
-  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 22px; margin-bottom: 16px; }
-  .panel h2 { font-size: 24px; margin-bottom: 8px; }
-  .panel p { margin: 4px 0 10px; font-size: 14px; color: var(--muted); }
-  .guestzips { display: flex; flex-wrap: wrap; gap: 8px; }
   .date-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 12px; margin: 14px 0 6px; }
   @media (max-width: 560px) { .date-grid { grid-template-columns: 1fr 1fr; } .date-grid > :first-child { grid-column: 1 / -1; } }
   .date-grid label { margin: 0; }
@@ -78,9 +201,10 @@
     display: block; width: 100%; min-height: 48px; margin-top: 6px; padding: 0 14px; border-radius: var(--radius-sm);
     border: 1px solid color-mix(in srgb, var(--text) 14%, var(--bg)); background: var(--bg); color: var(--text); font: 16px var(--body);
   }
-  .date-preview { margin: 8px 0 14px; font-size: 14px; color: var(--text); }
-  .linkish { border: 0; background: none; padding: 0; margin-left: 6px; font: inherit; color: var(--primary); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-  details.settings summary { cursor: pointer; font-size: 14px; color: var(--muted); margin: 18px 0 8px; }
+  .date-preview { margin: 8px 0 14px; font-size: 14px; color: var(--text) !important; }
+  .linkish { border: 0; background: none; padding: 0; font: 600 14px var(--body); color: var(--primary); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+  /* ---------- photo viewer & progress ---------- */
   .lb { position: fixed; inset: 0; background: rgba(15,14,12,.94); z-index: 50; display: grid; grid-template-rows: auto 1fr auto; color: #fff; }
   .lb .bar-top, .lb .bar-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; font-size: 14px; }
   /* The photo/video always fits the space between the two bars, letterboxed. */
@@ -100,142 +224,240 @@
 </style>
 </head>
 <body>
-<main>
-  <!-- Login -->
-  <section class="login" id="loginView" hidden>
-    <img id="loginLogo" class="login-logo" alt="" hidden>
-    <h1 id="loginNames"></h1>
-    <p>Admin</p>
-    <form id="loginForm">
-      <input type="password" id="password" placeholder="Admin password" autocomplete="current-password" required>
-      <button class="btn" type="submit">Log in</button>
-      <div class="err" id="loginErr"></div>
-    </form>
-  </section>
+<!-- Login -->
+<section class="login" id="loginView" hidden>
+  <img id="loginLogo" class="login-logo" alt="" hidden>
+  <h1 id="loginNames"></h1>
+  <p>Admin</p>
+  <form id="loginForm">
+    <input type="password" id="password" placeholder="Admin password" autocomplete="current-password" required>
+    <button class="btn" type="submit">Log in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</section>
 
-  <!-- Dashboard -->
-  <section id="appView" hidden>
-    <div class="top">
+<!-- Dashboard -->
+<div class="app" id="appView" hidden>
+  <aside class="side" id="side" aria-label="Menu">
+    <div class="side-head">
+      <img id="sideLogo" alt="" hidden>
+      <span class="mark" id="sideMark" aria-hidden="true"></span>
+      <div><b id="title"></b><small>Admin</small></div>
+    </div>
+    <nav>
+      <a class="nav-item" href="#overview" data-page="overview">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
+        Overview
+      </a>
+      <p class="nav-label">Collect</p>
+      <a class="nav-item" href="#photos" data-page="photos">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 15.5l-5-5L6.5 20"/></svg>
+        Photos &amp; videos <span class="nav-n" id="navPhotosN"></span>
+      </a>
+      <a class="nav-item" href="#messages" data-page="messages">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4z"/></svg>
+        Messages <span class="nav-n" id="navMsgN"></span>
+      </a>
+      <a class="nav-item" href="#guests" data-page="guests">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.7 3 2.4 3.5 5.2"/></svg>
+        Guests <span class="nav-n" id="navGuestN"></span>
+      </a>
+      <p class="nav-label">Set up</p>
+      <a class="nav-item" href="#date" data-page="date">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        Wedding date
+      </a>
+      <a class="nav-item" href="#design" data-page="design">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+        Guest page
+      </a>
+      <a class="nav-item" href="/admin/card" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20.5 14v.01M14 20.5h.01M17.5 20.5H21v-3.5"/></svg>
+        QR card <span class="ext" aria-hidden="true">↗</span>
+      </a>
+    </nav>
+    <div class="side-foot">
+      <a class="nav-item" href="/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></svg>
+        View guest page
+      </a>
+      <button class="nav-item" id="logoutBtn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg>
+        Log out
+      </button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <div class="content">
+    <header class="topbar">
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="side">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
       <div>
-        <h1 id="title"></h1>
-        <div class="sub"><span id="windowInfo"></span><button class="linkish" id="editDate" type="button">Change date</button></div>
+        <h1 id="pageTitle">Overview</h1>
+        <div class="sub" id="pageSub"></div>
       </div>
       <div class="actions">
-        <a class="btn small ghost" href="/" target="_blank">Upload page ↗</a>
-        <a class="btn small ghost" href="/admin/card" target="_blank">QR card ↗</a>
-        <button class="btn small" id="zipBtn" type="button">Download all (.zip)</button>
         <button class="btn small ghost" id="refreshBtn" type="button">Refresh</button>
-        <button class="btn small ghost" id="logoutBtn" type="button">Log out</button>
+        <button class="btn small" id="zipBtn" type="button">Download all</button>
       </div>
-    </div>
+    </header>
 
-    <div class="stats">
-      <div class="stat storage" id="storageStat">
-        <div class="n" id="storageN">—</div>
-        <div class="l" id="storageL">of free storage used</div>
-        <div class="bar"><i id="storageBar"></i></div>
-      </div>
-      <div class="stat"><div class="n" id="fileN">—</div><div class="l" id="fileL">files</div></div>
-      <div class="stat"><div class="n" id="guestN">—</div><div class="l">guests</div></div>
-      <button class="stat stat-link" id="msgStat" type="button"><div class="n" id="msgN">—</div><div class="l">messages · view</div></button>
-    </div>
-
-    <div class="panel" id="fallbackPanel" hidden>
-      <h2>Download by guest</h2>
-      <p>Your browser can't stream one big zip straight to disk (that needs Chrome or Edge on a computer), so download one zip per guest instead. Each zip is built in memory — very large ones may fail; if so, use Chrome or Edge on a computer.</p>
-      <div class="guestzips" id="guestZips"></div>
-    </div>
-
-    <div class="tabs" role="tablist" aria-label="What to show">
-      <button class="tab" id="tabPhotos" role="tab" type="button" aria-selected="true" aria-controls="photosView">Photos &amp; videos <span id="tabPhotosN"></span></button>
-      <button class="tab" id="tabMsgs" role="tab" type="button" aria-selected="false" aria-controls="messages">Messages <span id="tabMsgN"></span></button>
-    </div>
-
-    <div id="photosView" role="tabpanel" aria-labelledby="tabPhotos">
-    <div class="toolbar">
-      <select id="guestFilter" aria-label="Filter by guest"></select>
-      <select id="typeFilter" aria-label="Filter by type">
-        <option value="">Photos &amp; videos</option>
-        <option value="image">Photos only</option>
-        <option value="video">Videos only</option>
-      </select>
-      <span class="count" id="countInfo"></span>
-    </div>
-    <div class="grid" id="grid"></div>
-    <div class="empty" id="empty" hidden>No uploads yet.</div>
-    </div>
-
-    <section class="messages" id="messages" role="tabpanel" aria-labelledby="tabMsgs" hidden>
-      <div class="msg-head">
-        <span class="count" id="msgInfo"></span>
-        <button class="btn small ghost" id="msgSave" type="button" hidden>Save as text file</button>
-      </div>
-      <div class="msg-list" id="msgList"></div>
-      <div class="empty" id="msgEmpty" hidden>No messages yet.</div>
-    </section>
-
-    <details class="settings">
-      <summary>Settings &amp; clean-up</summary>
-      <div class="panel" id="datePanel">
-        <h2>Wedding date</h2>
-        <p id="dateInfo">Everything follows this date: the date under your names and on the QR card, the countdown, and when guests can upload.</p>
-        <div class="date-grid">
-          <label>Wedding day<input type="date" id="dateDay" required></label>
-          <label>Uploads open at<input type="time" id="dateOpens" step="60"></label>
-          <label>Open for
-            <select id="dateDays">
-              <option value="1">1 day</option>
-              <option value="2">2 days</option>
-              <option value="3">3 days</option>
-              <option value="7">7 days</option>
-              <option value="14">14 days</option>
-              <option value="30">30 days</option>
-            </select>
-          </label>
+    <main>
+      <!-- Overview -->
+      <section class="page" id="page-overview">
+        <div class="stats">
+          <div class="stat" id="storageStat">
+            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Storage</div>
+            <div class="n" id="storageN">—</div>
+            <div class="bar"><i id="storageBar"></i></div>
+            <div class="l" id="storageL">of free storage used</div>
+          </div>
+          <a class="stat" href="#photos">
+            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 15.5l-5-5L6.5 20"/></svg>Files</div>
+            <div class="n" id="fileN">—</div><div class="l" id="fileL">files</div>
+          </a>
+          <a class="stat" href="#guests">
+            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/></svg>Guests</div>
+            <div class="n" id="guestN">—</div><div class="l">shared photos or videos</div>
+          </a>
+          <a class="stat" href="#messages" id="msgStat">
+            <div class="k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4z"/></svg>Messages</div>
+            <div class="n" id="msgN">—</div><div class="l" id="msgL">written by guests</div>
+          </a>
         </div>
-        <p class="date-preview" id="datePreview"></p>
-        <div class="actions">
-          <button class="btn small" id="dateSave" type="button">Save date</button>
-          <button class="btn small ghost" id="dateReset" type="button">Go back to the config date</button>
+
+        <div class="ov">
+          <div class="panel ov-window">
+            <div class="panel-head"><h2>Upload window</h2><span class="pill" id="ovPill"></span></div>
+            <div class="big" id="ovBig"></div>
+            <p id="windowInfo"></p>
+            <div class="actions">
+              <button class="btn small ghost" id="editDate" type="button">Change date</button>
+              <a class="btn small ghost" href="/admin/card" target="_blank" rel="noopener">Print QR card</a>
+            </div>
+          </div>
+          <div class="panel ov-recent">
+            <div class="panel-head"><h2>Newest uploads</h2><a class="see" href="#photos">See all</a></div>
+            <div class="mini-grid" id="ovRecent"></div>
+            <p class="empty-sm" id="ovRecentEmpty" hidden>No uploads yet. They'll show up here as guests share them.</p>
+          </div>
+          <div class="panel ov-msgs">
+            <div class="panel-head"><h2>Newest messages</h2><a class="see" href="#messages">See all</a></div>
+            <div id="ovMsgs"></div>
+            <p class="empty-sm" id="ovMsgsEmpty" hidden>No messages yet.</p>
+          </div>
+          <div class="panel ov-guests">
+            <div class="panel-head"><h2>Top guests</h2><a class="see" href="#guests">See all</a></div>
+            <ol class="rank" id="ovGuests"></ol>
+            <p class="empty-sm" id="ovGuestsEmpty" hidden>No guests have uploaded yet.</p>
+          </div>
         </div>
-      </div>
-      <div class="panel">
-        <h2>Our photos (polaroids)</h2>
-        <p>Up to 12 photos of the two of you, shown as polaroids at the bottom of the guest page. Each one is shown as a square, cropped to the middle. Captions are optional and appear on the white strip.</p>
-        <div class="pol-list" id="polList"></div>
-        <input type="file" id="polFile" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden>
-        <div class="actions">
-          <button class="btn small" id="polBtn" type="button">Add photos</button>
-          <span class="count" id="polInfo"></span>
+      </section>
+
+      <!-- Photos & videos -->
+      <section class="page" id="page-photos" hidden>
+        <div class="toolbar">
+          <select id="guestFilter" aria-label="Filter by guest"></select>
+          <select id="typeFilter" aria-label="Filter by type">
+            <option value="">Photos &amp; videos</option>
+            <option value="image">Photos only</option>
+            <option value="video">Videos only</option>
+          </select>
+          <span class="count" id="countInfo"></span>
         </div>
-      </div>
-      <div class="panel">
-        <h2>Header photo</h2>
-        <p id="headerInfo">Shown at the top of the guest page.</p>
-        <input type="file" id="headerFile" accept="image/*" hidden>
-        <div class="actions">
-          <button class="btn small" id="headerBtn" type="button">Upload header photo</button>
-          <button class="btn small danger" id="headerDel" type="button">Remove</button>
+        <div class="grid" id="grid"></div>
+        <div class="empty" id="empty" hidden>No uploads yet.</div>
+      </section>
+
+      <!-- Messages -->
+      <section class="page" id="page-messages" hidden>
+        <div class="msg-head">
+          <span class="count" id="msgInfo"></span>
+          <button class="btn small ghost" id="msgSave" type="button" hidden>Save as text file</button>
         </div>
-      </div>
-      <div class="panel">
-        <h2>Monogram &amp; browser icon</h2>
-        <p id="brandInfo">Shown above your names on the guest page, the login screen and the QR card, and used as the little icon in the browser tab and on phone home screens. A PNG with a transparent background looks best.</p>
-        <img id="brandPreview" class="brand-preview" alt="" hidden>
-        <input type="file" id="brandFile" accept="image/png,image/webp,image/jpeg" hidden>
-        <div class="actions">
-          <button class="btn small" id="brandBtn" type="button">Upload monogram</button>
-          <button class="btn small danger" id="brandDel" type="button">Remove</button>
+        <div class="msg-list" id="msgList"></div>
+        <div class="empty" id="msgEmpty" hidden>No messages yet.</div>
+      </section>
+
+      <!-- Guests -->
+      <section class="page" id="page-guests" hidden>
+        <div class="panel" id="fallbackPanel" hidden>
+          <h2>Download one guest at a time</h2>
+          <p>This browser can't save one big zip straight to disk (that needs Chrome or Edge on a computer), so download each guest's zip below instead. Very large ones may fail; if so, use Chrome or Edge on a computer.</p>
         </div>
-      </div>
-      <div class="panel">
-        <h2>Delete everything</h2>
-        <p>Deletes every uploaded photo, video, thumbnail and guest message. Use this to clear out test uploads before the wedding, or after you've downloaded and backed up everything. This can't be undone.</p>
-        <button class="btn small danger" id="deleteAllBtn" type="button">Delete all uploads…</button>
-      </div>
-    </details>
-  </section>
-</main>
+        <ul class="guest-list" id="guestList"></ul>
+        <div class="empty" id="guestEmpty" hidden>No guests have uploaded yet.</div>
+      </section>
+
+      <!-- Wedding date -->
+      <section class="page setup" id="page-date" hidden>
+        <div class="panel" id="datePanel">
+          <h2>Wedding date</h2>
+          <p id="dateInfo">Everything follows this date: the date under your names and on the QR card, the countdown, and when guests can upload.</p>
+          <div class="date-grid">
+            <label>Wedding day<input type="date" id="dateDay" required></label>
+            <label>Uploads open at<input type="time" id="dateOpens" step="60"></label>
+            <label>Open for
+              <select id="dateDays">
+                <option value="1">1 day</option>
+                <option value="2">2 days</option>
+                <option value="3">3 days</option>
+                <option value="7">7 days</option>
+                <option value="14">14 days</option>
+                <option value="30">30 days</option>
+              </select>
+            </label>
+          </div>
+          <p class="date-preview" id="datePreview"></p>
+          <div class="actions">
+            <button class="btn small" id="dateSave" type="button">Save date</button>
+            <button class="btn small ghost" id="dateReset" type="button">Go back to the config date</button>
+          </div>
+        </div>
+        <div class="panel danger">
+          <h2>Delete everything</h2>
+          <p>Deletes every uploaded photo, video, thumbnail and guest message. Use this to clear out test uploads before the wedding, or after you've downloaded and backed up everything. This can't be undone.</p>
+          <button class="btn small danger" id="deleteAllBtn" type="button">Delete all uploads…</button>
+        </div>
+      </section>
+
+      <!-- Guest page -->
+      <section class="page setup" id="page-design" hidden>
+        <div class="panel">
+          <h2>Our photos (polaroids)</h2>
+          <p>Up to 12 photos of the two of you, shown as polaroids at the bottom of the guest page. Each one is shown as a square, cropped to the middle. Captions are optional and appear on the white strip.</p>
+          <div class="pol-list" id="polList"></div>
+          <input type="file" id="polFile" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden>
+          <div class="actions">
+            <button class="btn small" id="polBtn" type="button">Add photos</button>
+            <span class="count" id="polInfo"></span>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Header photo</h2>
+          <p id="headerInfo">Shown at the top of the guest page.</p>
+          <input type="file" id="headerFile" accept="image/*" hidden>
+          <div class="actions">
+            <button class="btn small" id="headerBtn" type="button">Upload header photo</button>
+            <button class="btn small danger" id="headerDel" type="button">Remove</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Monogram &amp; browser icon</h2>
+          <p id="brandInfo">Shown above your names on the guest page, the login screen and the QR card, and used as the little icon in the browser tab and on phone home screens. A PNG with a transparent background looks best.</p>
+          <img id="brandPreview" class="brand-preview" alt="" hidden>
+          <input type="file" id="brandFile" accept="image/png,image/webp,image/jpeg" hidden>
+          <div class="actions">
+            <button class="btn small" id="brandBtn" type="button">Upload monogram</button>
+            <button class="btn small danger" id="brandDel" type="button">Remove</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
 
 <div class="lb" id="lightbox" hidden>
   <div class="bar-top">
@@ -269,6 +491,14 @@ if (W.font === "modern") document.documentElement.classList.add("font-modern");
 $("loginNames").textContent = W.coupleNames;
 if (W.logo) { $("loginLogo").src = W.logo; $("loginLogo").hidden = false; }
 $("title").textContent = W.coupleNames;
+function sideBrand() {
+  $("sideLogo").hidden = !W.logo;
+  $("sideMark").hidden = !!W.logo;
+  if (W.logo) $("sideLogo").src = W.logo;
+  // Initials of the names ("Ana & Ben" → "AB") when there's no monogram.
+  $("sideMark").textContent = (W.coupleNames || "").split(/\s*(?:&|and|\+)\s*/).map((p) => p.trim()[0] || "").join("").slice(0, 2).toUpperCase();
+}
+sideBrand();
 
 let files = [];
 let shown = [];
@@ -347,10 +577,11 @@ async function load() {
   $("storageStat").classList.toggle("warn", pct >= 0.8 && pct < 1);
   $("storageStat").classList.toggle("over", pct >= 1);
   $("fileN").textContent = s.fileCount;
-  $("tabPhotosN").textContent = `(${s.fileCount})`;
-  $("fileL").textContent = `files · ${s.photos} photos, ${s.videos} videos`;
+  $("navPhotosN").textContent = s.fileCount || "";
+  $("fileL").textContent = `${s.photos} photos · ${s.videos} videos`;
   $("guestN").textContent = s.guestCount;
-  $("windowInfo").textContent = windowText();
+  $("navGuestN").textContent = s.guestCount || "";
+  renderWindow();
 
   const sel = $("guestFilter");
   const prev = sel.value;
@@ -366,30 +597,192 @@ async function load() {
   $("brandPreview").hidden = !W.logo;
   if (W.logo) $("brandPreview").src = W.logo;
   $("brandDel").hidden = !W.logo;
+  sideBrand();
   renderGrid();
+  renderRecent();
+  renderGuests();
   loadMessages();
 }
 
-// ---------- tabs ----------
-// The tab is kept in the address (#messages) so a refresh stays on it.
-function showTab(name) {
-  const msgs = name === "messages";
-  $("photosView").hidden = msgs;
-  $("messages").hidden = !msgs;
-  $("tabPhotos").setAttribute("aria-selected", String(!msgs));
-  $("tabMsgs").setAttribute("aria-selected", String(msgs));
-  history.replaceState(null, "", msgs ? "#messages" : location.pathname + location.search);
+// ---------- pages ----------
+// Each page has its own address (#photos, #messages, …) so a refresh stays on it.
+const PAGES = { overview: "Overview", photos: "Photos & videos", messages: "Messages", guests: "Guests", date: "Wedding date", design: "Guest page" };
+function route() {
+  let name = location.hash.slice(1);
+  if (!PAGES[name]) name = "overview";
+  for (const k of Object.keys(PAGES)) $("page-" + k).hidden = k !== name;
+  document.querySelectorAll(".side [data-page]").forEach((a) => {
+    if (a.dataset.page === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+  $("pageTitle").textContent = PAGES[name];
+  $("pageSub").textContent = name === "overview" ? W.weddingDate || "" : "";
+  document.title = `${PAGES[name]} · ${W.coupleNames} · Admin`;
+  closeMenu();
+  window.scrollTo(0, 0);
 }
-$("tabPhotos").onclick = () => showTab("photos");
-$("tabMsgs").onclick = () => showTab("messages");
-$("msgStat").onclick = () => { showTab("messages"); $("tabMsgs").scrollIntoView({ block: "start", behavior: "smooth" }); };
-document.querySelector(".tabs").addEventListener("keydown", (e) => {
-  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-  const next = document.activeElement === $("tabPhotos") ? $("tabMsgs") : $("tabPhotos");
-  next.focus();
-  next.click();
-});
-if (location.hash === "#messages") showTab("messages");
+window.addEventListener("hashchange", route);
+
+// ---------- menu on phones ----------
+function openMenu() {
+  $("side").classList.add("open");
+  $("scrim").hidden = false;
+  $("menuBtn").setAttribute("aria-expanded", "true");
+  document.body.style.overflow = "hidden";
+  $("side").querySelector("[aria-current]")?.focus();
+}
+function closeMenu() {
+  if (!$("side").classList.contains("open")) return;
+  $("side").classList.remove("open");
+  $("scrim").hidden = true;
+  $("menuBtn").setAttribute("aria-expanded", "false");
+  document.body.style.overflow = "";
+}
+$("menuBtn").onclick = openMenu;
+$("scrim").onclick = closeMenu;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("lightbox").hidden) closeMenu(); });
+// A tap on the current page's link still closes the menu.
+$("side").addEventListener("click", (e) => { if (e.target.closest("a[href^='#']")) closeMenu(); });
+
+// ---------- overview ----------
+function renderWindow() {
+  $("windowInfo").textContent = windowText();
+  const now = Date.now(), opens = Date.parse(W.uploadOpens), closes = Date.parse(W.uploadCloses);
+  const pill = $("ovPill"), big = $("ovBig");
+  big.innerHTML = "";
+  const n = document.createElement("b"), t = document.createElement("span");
+  if (now < opens) {
+    const days = Math.ceil((opens - now) / 864e5);
+    pill.className = "pill"; pill.textContent = "Not open yet";
+    n.textContent = days; t.textContent = days === 1 ? "day until guests can upload" : "days until guests can upload";
+  } else if (!(now >= closes)) {
+    const left = Math.max(1, Math.ceil((closes - now) / 864e5));
+    pill.className = "pill open"; pill.textContent = "Open now";
+    n.textContent = left; t.textContent = left === 1 ? "day left for uploads" : "days left for uploads";
+  } else {
+    pill.className = "pill"; pill.textContent = "Closed";
+    n.textContent = files.length; t.textContent = files.length === 1 ? "file collected" : "files collected";
+  }
+  big.append(n, t);
+}
+function renderRecent() {
+  const box = $("ovRecent");
+  box.innerHTML = "";
+  const recent = files.slice(0, 8);
+  $("ovRecentEmpty").hidden = recent.length > 0;
+  box.hidden = !recent.length;
+  recent.forEach((f) => box.append(makeTile(f, () => {
+    // Open it in the full grid with every guest showing, so next/previous work.
+    $("guestFilter").value = "\u0000all";
+    $("typeFilter").value = "";
+    renderGrid();
+    location.hash = "#photos";
+    openLightbox(shown.indexOf(f));
+  })));
+  // Top guests by number of files.
+  const rank = $("ovGuests");
+  rank.innerHTML = "";
+  const top = guestGroups().slice(0, 5);
+  $("ovGuestsEmpty").hidden = top.length > 0;
+  const most = top.length ? top[0].list.length : 1;
+  for (const g of top) {
+    const li = document.createElement("li");
+    const who = document.createElement("span");
+    who.className = "who";
+    who.textContent = guestLabel(g.guest);
+    const n = document.createElement("span");
+    n.className = "n";
+    n.textContent = g.list.length === 1 ? "1 file" : g.list.length + " files";
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    const fill = document.createElement("i");
+    fill.style.width = (g.list.length / most) * 100 + "%";
+    bar.append(fill);
+    li.append(avatar(g.guest), who, n, bar);
+    rank.append(li);
+  }
+}
+function renderOverviewMessages() {
+  const box = $("ovMsgs");
+  box.innerHTML = "";
+  $("ovMsgsEmpty").hidden = messages.length > 0;
+  for (const m of messages.slice(0, 3)) {
+    const d = document.createElement("div");
+    d.className = "ov-msg";
+    const p = document.createElement("p");
+    p.textContent = m.text;
+    const s = document.createElement("small");
+    const b = document.createElement("b");
+    b.textContent = guestLabel(m.guest);
+    s.append(b, " · " + fmt(m.at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }));
+    d.append(p, s);
+    box.append(d);
+  }
+}
+function avatar(guest) {
+  const a = document.createElement("span");
+  a.className = "avatar";
+  a.setAttribute("aria-hidden", "true");
+  a.textContent = (guestLabel(guest).replace(/[^\p{L}\p{N}]/gu, "")[0] || "?").toUpperCase();
+  return a;
+}
+
+// ---------- guests ----------
+function guestGroups() {
+  const by = new Map();
+  for (const f of files) { if (!by.has(f.guest)) by.set(f.guest, []); by.get(f.guest).push(f); }
+  return [...by].map(([guest, list]) => ({ guest, list, size: list.reduce((a, f) => a + f.size, 0) }))
+    .sort((a, b) => b.list.length - a.list.length || guestLabel(a.guest).localeCompare(guestLabel(b.guest)));
+}
+function renderGuests() {
+  const ul = $("guestList");
+  ul.innerHTML = "";
+  const groups = guestGroups();
+  $("guestEmpty").hidden = groups.length > 0;
+  ul.hidden = !groups.length;
+  if (!groups.length) return;
+  const head = document.createElement("li");
+  head.className = "guest-row head";
+  head.innerHTML = "<span></span><span>Guest</span><span>Files</span><span>Size</span><span>Last upload</span><span></span>";
+  ul.append(head);
+  for (const g of groups) {
+    const li = document.createElement("li");
+    li.className = "guest-row";
+    const who = document.createElement("span");
+    who.className = "who";
+    who.textContent = guestLabel(g.guest);
+    const photos = g.list.filter((f) => mediaKind(f) === "image").length;
+    const videos = g.list.filter((f) => mediaKind(f) === "video").length;
+    const kinds = document.createElement("span");
+    kinds.className = "dim";
+    kinds.textContent = [photos && `${photos} ${photos === 1 ? "photo" : "photos"}`, videos && `${videos} ${videos === 1 ? "video" : "videos"}`].filter(Boolean).join(" · ") || `${g.list.length} files`;
+    const size = document.createElement("span");
+    size.className = "dim";
+    size.textContent = bytes(g.size);
+    const last = document.createElement("span");
+    last.className = "dim";
+    last.textContent = fmt(g.list[0].uploadedAt, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const acts = document.createElement("span");
+    acts.className = "actions";
+    const view = document.createElement("button");
+    view.className = "btn small ghost";
+    view.type = "button";
+    view.textContent = "View";
+    view.onclick = () => {
+      $("guestFilter").value = g.guest;
+      $("typeFilter").value = "";
+      renderGrid();
+      location.hash = "#photos";
+    };
+    const dl = document.createElement("button");
+    dl.className = "btn small";
+    dl.type = "button";
+    dl.textContent = "Download zip";
+    dl.onclick = () => zipGuest(g.guest, g.list, dl);
+    acts.append(view, dl);
+    li.append(avatar(g.guest), who, kinds, size, last, acts);
+    ul.append(li);
+  }
+}
 
 // ---------- messages ----------
 let messages = [];
@@ -397,8 +790,10 @@ async function loadMessages() {
   try { messages = (await api("/api/admin/messages")).messages; }
   catch (e) { toast(e.message); return; }
   $("msgN").textContent = messages.length;
-  $("tabMsgN").textContent = `(${messages.length})`;
+  $("navMsgN").textContent = messages.length || "";
   const writers = new Set(messages.map((m) => m.guest)).size;
+  $("msgL").textContent = messages.length ? `from ${writers} ${writers === 1 ? "guest" : "guests"}` : "written by guests";
+  renderOverviewMessages();
   $("msgInfo").textContent = messages.length ? `${messages.length} ${messages.length === 1 ? "message" : "messages"} from ${writers} ${writers === 1 ? "guest" : "guests"}, newest first` : "";
   $("msgEmpty").hidden = messages.length > 0;
   $("msgSave").hidden = messages.length === 0;
@@ -455,28 +850,29 @@ function renderGrid() {
   $("empty").hidden = shown.length > 0;
   $("countInfo").textContent = shown.length === files.length ? "" : `${shown.length} shown · ${bytes(shown.reduce((a, f) => a + f.size, 0))}`;
   const frag = document.createDocumentFragment();
-  shown.forEach((f, i) => {
-    const b = document.createElement("button");
-    b.className = "tile";
-    b.type = "button";
-    b.title = `${f.filename} — ${guestLabel(f.guest)}`;
-    if (f.hasThumb || (!isVideo(f) && f.size < 3e6 && /jpe?g|png|webp|gif/.test(f.type))) {
-      const img = document.createElement("img");
-      img.loading = "lazy";
-      img.alt = f.filename;
-      img.src = f.hasThumb ? thumbUrl(f) : fileUrl(f);
-      img.onerror = () => { img.remove(); addPlaceholder(b, f); };
-      b.append(img);
-    } else addPlaceholder(b, f);
-    const who = document.createElement("span");
-    who.className = "who";
-    who.textContent = guestLabel(f.guest);
-    b.append(who);
-    if (isVideo(f)) { const v = document.createElement("span"); v.className = "badge"; v.textContent = "▶ video"; b.append(v); }
-    b.onclick = () => openLightbox(i);
-    frag.append(b);
-  });
+  shown.forEach((f, i) => frag.append(makeTile(f, () => openLightbox(i))));
   grid.append(frag);
+}
+function makeTile(f, onclick) {
+  const b = document.createElement("button");
+  b.className = "tile";
+  b.type = "button";
+  b.title = `${f.filename} — ${guestLabel(f.guest)}`;
+  if (f.hasThumb || (!isVideo(f) && f.size < 3e6 && /jpe?g|png|webp|gif/.test(f.type))) {
+    const img = document.createElement("img");
+    img.loading = "lazy";
+    img.alt = f.filename;
+    img.src = f.hasThumb ? thumbUrl(f) : fileUrl(f);
+    img.onerror = () => { img.remove(); addPlaceholder(b, f); };
+    b.append(img);
+  } else addPlaceholder(b, f);
+  const who = document.createElement("span");
+  who.className = "who";
+  who.textContent = guestLabel(f.guest);
+  b.append(who);
+  if (isVideo(f)) { const v = document.createElement("span"); v.className = "badge"; v.textContent = "▶ video"; b.append(v); }
+  b.onclick = onclick;
+  return b;
 }
 function addPlaceholder(tile, f) {
   const p = document.createElement("span");
@@ -631,9 +1027,9 @@ window.addEventListener("beforeunload", (e) => { if (zipping) { e.preventDefault
 $("zipBtn").addEventListener("click", async () => {
   if (!files.length) return toast("Nothing to download yet.");
   if (!("showSaveFilePicker" in window)) {
-    buildGuestButtons();
+    // No streaming save here (phones, Safari, Firefox): download guest by guest instead.
     $("fallbackPanel").hidden = false;
-    $("fallbackPanel").scrollIntoView({ behavior: "smooth" });
+    location.hash = "#guests";
     return;
   }
   const name = (W.coupleNames || "wedding").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").toLowerCase() + "-photos.zip";
@@ -664,41 +1060,29 @@ $("zipBtn").addEventListener("click", async () => {
   } finally { zipping = false; }
 });
 
-function buildGuestButtons() {
-  const by = new Map();
-  for (const f of files) { if (!by.has(f.guest)) by.set(f.guest, []); by.get(f.guest).push(f); }
-  const box = $("guestZips");
-  box.innerHTML = "";
-  for (const [g, list] of [...by].sort((a, b) => guestLabel(a[0]).localeCompare(guestLabel(b[0])))) {
-    const b = document.createElement("button");
-    b.className = "btn small ghost";
-    b.type = "button";
-    const size = list.reduce((a, f) => a + f.size, 0);
-    b.textContent = `${guestLabel(g)} · ${list.length} files · ${bytes(size)}`;
-    b.onclick = async () => {
-      b.disabled = true;
-      zipping = true;
-      let count = 0;
-      try {
-        const entries = zipEntries(list);
-        showProgress(`Preparing ${guestLabel(g)}…`, 0);
-        const blob = await downloadZip(fetchAll(entries, () => showProgress(`Zipping ${guestLabel(g)}… ${++count} of ${list.length}`, (count / list.length) * 100))).blob();
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = guestLabel(g).replace(/[^\p{L}\p{N}]+/gu, "-") + ".zip";
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-        showProgress(`${guestLabel(g)} downloaded.`, 100);
-        b.textContent = "✓ " + b.textContent;
-      } catch (e) {
-        showProgress("Failed: " + e.message, 0);
-      } finally {
-        zipping = false;
-        b.disabled = false;
-        setTimeout(() => ($("progress").hidden = true), 4000);
-      }
-    };
-    box.append(b);
+// One guest's files as a zip, built in memory (works in every browser).
+async function zipGuest(g, list, b) {
+  if (zipping) return toast("Another download is still running.");
+  b.disabled = true;
+  zipping = true;
+  let count = 0;
+  try {
+    const entries = zipEntries(list);
+    showProgress(`Preparing ${guestLabel(g)}…`, 0);
+    const blob = await downloadZip(fetchAll(entries, () => showProgress(`Zipping ${guestLabel(g)}… ${++count} of ${list.length}`, (count / list.length) * 100))).blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = guestLabel(g).replace(/[^\p{L}\p{N}]+/gu, "-") + ".zip";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    showProgress(`${guestLabel(g)} downloaded.`, 100);
+    b.textContent = "✓ Downloaded";
+  } catch (e) {
+    showProgress("Failed: " + e.message, 0);
+  } finally {
+    zipping = false;
+    b.disabled = false;
+    setTimeout(() => ($("progress").hidden = true), 4000);
   }
 }
 
@@ -733,7 +1117,8 @@ for (const id of ["dateDay", "dateOpens", "dateDays"]) $(id).addEventListener("i
 function applyDates(r) {
   Object.assign(W, r);
   fillDate();
-  $("windowInfo").textContent = windowText();
+  renderWindow();
+  if (location.hash === "#overview" || !location.hash) route();
 }
 $("dateSave").onclick = async () => {
   try {
@@ -752,9 +1137,8 @@ $("dateReset").onclick = async () => {
   catch (err) { toast(err.message); }
 };
 $("editDate").onclick = () => {
-  document.querySelector("details.settings").open = true;
-  $("datePanel").scrollIntoView({ behavior: "smooth", block: "center" });
-  setTimeout(() => $("dateDay").focus({ preventScroll: true }), 400);
+  location.hash = "#date";
+  setTimeout(() => $("dateDay").focus({ preventScroll: true }), 50);
 };
 fillDate();
 
@@ -932,6 +1316,7 @@ $("deleteAllBtn").onclick = async () => {
   } catch (e) { toast(e.message); }
 };
 
+route();
 load();
 </script>
 </body>

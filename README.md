@@ -172,17 +172,17 @@ All your details live in **one file**: `src/config.js`. Open it in any text edit
 | `siteUrl` | Optional: the link printed on the QR card | `""` (uses the site's own address) |
 | `wifiName`, `wifiPassword`, `wifiSecurity` | Optional venue Wi-Fi, printed as a second "join the Wi-Fi" QR code on the table card. Only the admin-only QR card page sees them. You can also type them on the card page instead. | `"Venue Guest"`, `"…"`, `"WPA"` |
 
-**Changing the date later:** on the admin page, click **Change date** at the top (or open **Settings & clean-up → Wedding date**), pick the new day and click **Save date**. It takes effect straight away, with no redeploy, and beats whatever is in `config.js` or `.dev.vars`. **Go back to the config date** undoes it. If you change the date after printing QR cards, the cards still work, since the link doesn't change, but the printed card shows the date as it was when you printed it.
+**Changing the date later:** on the admin page, open **Wedding date** in the side menu (or click **Change date** on the Overview), pick the new day and click **Save date**. It takes effect straight away, with no redeploy, and beats whatever is in `config.js` or `.dev.vars`. **Go back to the config date** undoes it. If you change the date after printing QR cards, the cards still work, since the link doesn't change, but the printed card shows the date as it was when you printed it.
 
 **About the upload window:** uploads open at `uploadOpensAt` on the wedding day and close at 11:59 pm `uploadDays` days later, in your `timezone`. Outside the window, guests see "Uploads open on …" (with a countdown) or "Uploads are closed" instead of the upload button.
 
 **Advanced, optional:** `weddingDate` sets the shown date text exactly (for example `"18 September 2027"`), and `uploadOpens` / `uploadCloses` set the exact window as `"2027-09-18T12:00:00-04:00"` (the part after the time is your time zone's offset from UTC). Leave them `""` to have them worked out from `weddingDay`. A date saved on the admin page replaces these too.
 
-**Header photo:** the easiest way is to leave it `""` and upload a photo later from the admin page (**Settings & clean-up → Header photo**). Or put an image file in the `public` folder (for example `public/header.jpg`) and set `headerPhoto: "/header.jpg"`.
+**Header photo:** the easiest way is to leave it `""` and upload a photo later from the admin page (**Guest page → Header photo** in the side menu). Or put an image file in the `public` folder (for example `public/header.jpg`) and set `headerPhoto: "/header.jpg"`.
 
-**Monogram & browser icon:** on the admin page open **Settings & clean-up → Monogram & browser icon** and upload your monogram or logo (a PNG with a transparent background looks best). It appears above your names on the guest page, the admin login and the QR card, and the site makes the browser-tab icon (`favicon.ico`) and phone home-screen icon from it automatically. Like the header photo, it's stored in your R2 bucket, not in GitHub.
+**Monogram & browser icon:** on the admin page open **Guest page → Monogram & browser icon** in the side menu and upload your monogram or logo (a PNG with a transparent background looks best). It appears above your names on the guest page, the admin login and the QR card, and the site makes the browser-tab icon (`favicon.ico`) and phone home-screen icon from it automatically. Like the header photo, it's stored in your R2 bucket, not in GitHub.
 
-**Your photos as polaroids:** under **Settings & clean-up → Our photos (polaroids)** add up to 12 photos of the two of you, with an optional caption on each. They appear at the bottom of the guest page as tilted polaroids, cropped square from the middle. The admin page shrinks them before uploading, and like the monogram they live in your R2 bucket, not in GitHub.
+**Your photos as polaroids:** under **Guest page → Our photos (polaroids)** in the side menu add up to 12 photos of the two of you, with an optional caption on each. They appear at the bottom of the guest page as tilted polaroids, cropped square from the middle. The admin page shrinks them before uploading, and like the monogram they live in your R2 bucket, not in GitHub.
 
 Keep the quote marks and commas exactly as they are. Save the file.
 
@@ -307,7 +307,7 @@ Before the upload window opens, guests can't upload — but **you can, if you're
 4. Try switching to another app mid-upload, then come back. Try turning on airplane mode for a few seconds — it should retry, or show **Tap to retry**.
 5. On your computer, open `/admin`: check the photos appear with thumbnails, the video plays, and the guest name is right.
 6. Try **Download all** on your computer.
-7. When you're happy, go to **Settings & clean-up → Delete all uploads…** and type `DELETE` to clear the test files.
+7. When you're happy, go to **Wedding date → Delete all uploads…** in the side menu and type `DELETE` to clear the test files.
 
 To check what a normal guest sees, open the address in a private/incognito window.
 
@@ -348,11 +348,11 @@ Do this **within about 5 days** of the event to stay free (see [What it costs](#
 
 ### 1. Download everything
 
-On a **computer**, open `/admin` in **Google Chrome** or **Microsoft Edge** and click **Download all (.zip)**. Pick where to save it; the zip is written straight to disk, so it works even for many GB. Inside there's one folder per guest, with the original filenames.
+On a **computer**, open `/admin` in **Google Chrome** or **Microsoft Edge** and click **Download all** at the top right. Pick where to save it; the zip is written straight to disk, so it works even for many GB. Inside there's one folder per guest, with the original filenames.
 
 Keep the tab open until it says **Done**. It can take a while for large weddings — it's downloading everything.
 
-In Safari or Firefox you'll get one button per guest instead (each guest's zip is built in memory, so very large ones may fail — use Chrome or Edge if that happens). You can also open any photo and click **Download**.
+In Safari, Firefox or on a phone it opens the **Guests** page instead, with a **Download zip** button per guest (each guest's zip is built in memory, so very large ones may fail — use Chrome or Edge if that happens). You can also open any photo and click **Download**.
 
 ### 2. Back it up
 
@@ -360,7 +360,7 @@ Unzip it and check a few photos and videos open. Then keep **at least two copies
 
 ### 3. Delete the files from Cloudflare
 
-Only after your backups are safe: in `/admin`, **Settings & clean-up → Delete all uploads…** → type `DELETE`.
+Only after your backups are safe: in `/admin`, **Wedding date → Delete all uploads…** → type `DELETE`.
 
 ### 4. (Optional) Remove everything
 
@@ -417,7 +417,7 @@ For very large collections (50 GB+), the free tool [rclone](https://rclone.org/s
 | `src/config.js` | **Your wedding details** |
 | `src/index.js` | The Worker (server) |
 | `public/pages/guest.html` | Guest upload page (`/`) |
-| `public/pages/admin.html` | Admin gallery (`/admin`) |
+| `public/pages/admin.html` | Admin dashboard (`/admin`): overview, photos, messages, guests, set-up |
 | `public/pages/card.html` | Printable QR card (`/admin/card`) |
 | `public/app.css` | Shared styles |
 | `public/vendor/` | Bundled libraries and fonts |
