@@ -31,18 +31,21 @@
   .card.two .logo { height: 0.78in; }
   .card.has-logo .kicker { display: none; }
   .card.has-logo .single .qr { width: 1.75in; height: 1.75in; }
-  .kicker { text-transform: uppercase; letter-spacing: .16em; font-size: 8pt; font-weight: 600; color: var(--muted); }
+  .kicker { text-transform: uppercase; letter-spacing: .2em; font-size: 7.5pt; font-weight: 650; color: var(--accent); }
   .names { font-family: var(--display); font-size: 32pt; font-weight: 620; letter-spacing: -0.045em; line-height: 1; margin: 8pt 0 5pt; }
+  .names .amp { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; font-size: 1.06em; color: var(--accent); }
+  .font-modern .names .amp { font-family: inherit; font-style: normal; font-weight: 300; }
   .date { font-family: var(--display); font-weight: 500; font-size: 11.5pt; color: var(--muted); }
   .rule { width: 0.5in; height: 1px; background: var(--accent); margin: 12pt auto; opacity: .7; }
   .headline { font-family: var(--display); font-size: 16pt; font-weight: 600; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 5pt; }
-  .qr { width: 1.95in; height: 1.95in; margin: 10pt auto 8pt; padding: 0.08in; background: #fff; border-radius: 6px; }
+  .qr { width: 1.95in; height: 1.95in; margin: 10pt auto 8pt; padding: 0.09in; background: #fff; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); }
   .qr svg { width: 100%; height: 100%; display: block; }
   .steps { font-size: 8.5pt; color: var(--muted); line-height: 1.45; }
   .url { font-size: 8pt; margin-top: 6pt; color: var(--primary); word-break: break-all; }
 
   /* Two codes: Wi-Fi + upload */
-  .pair { display: none; grid-template-columns: 1fr 1fr; gap: 0.16in; width: 100%; margin-top: 4pt; }
+  /* The photo code is the bigger one; the two labels share a line. */
+  .pair { display: none; grid-template-columns: 1fr 1.25fr; gap: 0.14in; width: 100%; margin-top: 4pt; align-items: start; }
   .card.two .single { display: none; }
   .card.two .pair { display: grid; }
   .card.two .names { font-size: 28pt; }
@@ -53,8 +56,11 @@
   .num b { display: inline-block; width: 16pt; height: 16pt; line-height: 16pt; border-radius: 50%; background: var(--primary); color: #fff; font: 600 8.5pt/16pt var(--body); margin-right: 4pt; vertical-align: 1pt; }
   /* Both labels get room for two lines, so the two codes always line up. */
   .col .num { min-height: 2.3em; display: flex; align-items: center; justify-content: center; gap: 4pt; text-align: left; }
-  .col .num b { flex: none; margin-right: 0; vertical-align: 0; }
-  .col .qr { width: 1.34in; height: 1.34in; margin: 0 auto 5pt; padding: 0.06in; }
+  .col .num b { flex: none; margin-right: 0; vertical-align: 0; text-align: center; }
+  .col .qr { width: 1.16in; height: 1.16in; margin: 0 auto 5pt; padding: 0.06in; }
+  .col:last-child .qr { width: 1.52in; height: 1.52in; }
+  .card.has-logo .col:last-child .qr { width: 1.4in; height: 1.4in; }
+  .col .small { min-height: 2.7em; }
   .small { font-size: 7.5pt; color: var(--muted); line-height: 1.35; word-break: break-word; }
   .small strong { color: var(--text); font-weight: 600; }
   .card.two .steps { margin-top: 9pt; }
@@ -126,7 +132,7 @@
       <div class="small" id="urlOut2"></div>
     </div>
   </div>
-  <div class="steps pair-steps" id="pairSteps" hidden>Open your camera, point it at each code and tap the link · no app needed</div>
+  <div class="steps pair-steps" id="pairSteps" hidden>Open your camera and point it at each code · no app needed · full quality</div>
 </article>
 
 <script type="module">
@@ -137,7 +143,11 @@ qrcode.stringToBytes = (s) => Array.from(new TextEncoder().encode(s));
 const W = window.WEDDING;
 const $ = (id) => document.getElementById(id);
 if (W.font === "modern") document.documentElement.classList.add("font-modern");
-$("names").textContent = W.coupleNames;
+// The names, with the "&" (or "and") set apart in italic like on the guest page.
+for (const part of String(W.coupleNames || "").split(/(\s(?:&|and|\+)\s)/)) {
+  if (/^\s(?:&|and|\+)\s$/.test(part)) $("names").append(" ", Object.assign(document.createElement("span"), { className: "amp", textContent: part.trim() }), " ");
+  else $("names").append(part);
+}
 $("date").textContent = [W.weddingDate, W.venue].filter(Boolean).join(" · ");
 $("url").value = W.siteUrl || location.origin + "/";
 if (W.logo) { $("logo").src = W.logo; $("logoRow").hidden = false; }
