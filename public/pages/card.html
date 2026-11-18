@@ -43,9 +43,8 @@
   .steps { font-size: 8.5pt; color: var(--muted); line-height: 1.45; }
   .url { font-size: 8pt; margin-top: 6pt; color: var(--primary); word-break: break-all; }
 
-  /* Two codes: Wi-Fi + upload */
-  /* The photo code is the bigger one; the two labels share a line. */
-  .pair { display: none; grid-template-columns: 1fr 1.25fr; gap: 0.14in; width: 100%; margin-top: 4pt; align-items: start; }
+  /* Two codes: Wi-Fi + upload, the same size, with their labels on one line. */
+  .pair { display: none; grid-template-columns: 1fr 1fr; gap: 0.16in; width: 100%; margin-top: 4pt; align-items: start; }
   .card.two .single { display: none; }
   .card.two .pair { display: grid; }
   .card.two .names { font-size: 28pt; }
@@ -57,9 +56,8 @@
   /* Both labels get room for two lines, so the two codes always line up. */
   .col .num { min-height: 2.3em; display: flex; align-items: center; justify-content: center; gap: 4pt; text-align: left; }
   .col .num b { flex: none; margin-right: 0; vertical-align: 0; text-align: center; }
-  .col .qr { width: 1.16in; height: 1.16in; margin: 0 auto 5pt; padding: 0.06in; }
-  .col:last-child .qr { width: 1.52in; height: 1.52in; }
-  .card.has-logo .col:last-child .qr { width: 1.4in; height: 1.4in; }
+  .col .qr { width: 1.38in; height: 1.38in; margin: 0 auto 5pt; padding: 0.06in; }
+  .card.has-logo .col .qr { width: 1.3in; height: 1.3in; }
   .col .small { min-height: 2.7em; }
   .small { font-size: 7.5pt; color: var(--muted); line-height: 1.35; word-break: break-word; }
   .small strong { color: var(--text); font-weight: 600; }
