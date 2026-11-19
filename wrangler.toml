@@ -1,5 +1,5 @@
 # Cloudflare Worker settings. You normally don't need to change anything here.
-name = "wedding-photos"
+name = "kasal-snaps"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 workers_dev = true

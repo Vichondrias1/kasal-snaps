@@ -1,5 +1,5 @@
 {
-  "name": "wedding-photos",
+  "name": "kasal-snaps",
   "version": "1.0.0",
   "description": "Self-hosted wedding photo & video collector on a Cloudflare Worker + R2.",
   "scripts": {

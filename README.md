@@ -1,4 +1,4 @@
-# 💍 Wedding Photo Collector
+# 💍 Kasal Snaps
 
 A private website where your guests upload the photos and videos they take at your wedding — **no app, no sign-up, original quality** — and you download them all at once afterwards, sorted into one folder per guest.
 
@@ -97,7 +97,7 @@ Cloudflare moves menus around now and then. If a name above doesn't match exactl
 
 1. Make sure you're logged in to GitHub.
 2. On this project's GitHub page, click the green **Use this template** button → **Create a new repository**.
-3. Give it a name (for example `our-wedding-photos`).
+3. Give it a name (for example `kasal-snaps`).
 4. Choose **Private**. Your names, date and venue go into the code, and a private repo keeps them off the public internet. (If you want a public repo, see [Option B](#option-b-public-repo--keep-your-details-out-of-github) in step 7.)
 5. Click **Create repository**.
 
@@ -140,14 +140,14 @@ cd Desktop
 ```
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/our-wedding-photos.git
+git clone https://github.com/YOUR-USERNAME/kasal-snaps.git
 ```
 
 ```bash
-cd our-wedding-photos
+cd kasal-snaps
 ```
 
-A folder called `our-wedding-photos` is now on your Desktop. **Keep PowerShell/Terminal open in this folder for the rest of the guide.** If you close it, open it again and run `cd Desktop/our-wedding-photos`.
+A folder called `kasal-snaps` is now on your Desktop. **Keep PowerShell/Terminal open in this folder for the rest of the guide.** If you close it, open it again and run `cd Desktop/kasal-snaps`.
 
 > **Private repo and git asks for a password?** GitHub no longer accepts your account password here. The easiest fix is to install [GitHub Desktop](https://desktop.github.com), sign in, and use **File → Clone repository** instead.
 
@@ -208,7 +208,7 @@ Leave `src/config.js` with the placeholder values and keep your real details in 
 2. Open `.dev.vars` and fill in your real values. It's already listed in `.gitignore`, so git will never upload it.
 3. After you deploy (step 8), run `npm run push-secrets`. This uploads every line of `.dev.vars` to Cloudflare as encrypted settings. Run it again whenever you change `.dev.vars`.
 
-You can also type the same names (`COUPLE_NAMES`, `WEDDING_DATE`, …) into the Cloudflare dashboard under **Workers & Pages → wedding-photos → Settings → Variables and Secrets**. They're kept when you redeploy.
+You can also type the same names (`COUPLE_NAMES`, `WEDDING_DATE`, …) into the Cloudflare dashboard under **Workers & Pages → kasal-snaps → Settings → Variables and Secrets**. They're kept when you redeploy.
 
 Your details still appear on the live website — that's the point — just not in your GitHub repo.
 
@@ -242,7 +242,7 @@ npx wrangler r2 bucket create wedding-photos
 npm run deploy
 ```
 
-At the end it prints your address, like `https://wedding-photos.your-name.workers.dev`. Open it — you should see your names.
+At the end it prints your address, like `https://kasal-snaps.your-name.workers.dev`. Open it — you should see your names.
 
 Whenever you change `src/config.js` later, run `npm run deploy` again.
 
@@ -274,13 +274,13 @@ Pick your final address **before you print QR cards** — changing it later brea
 
 ### Option 1: free `workers.dev` address
 
-Your site is at `https://wedding-photos.YOUR-SUBDOMAIN.workers.dev`. `YOUR-SUBDOMAIN` is chosen once for your whole Cloudflare account (it defaults to something based on your email).
+Your site is at `https://kasal-snaps.YOUR-SUBDOMAIN.workers.dev`. `YOUR-SUBDOMAIN` is chosen once for your whole Cloudflare account (it defaults to something based on your email).
 
-To change it: Cloudflare dashboard → **Workers & Pages** → on the right side find **Subdomain** (or **Account details → Subdomain**) → **Change**. Something like `alexandsam` gives `https://wedding-photos.alexandsam.workers.dev`. It can take a few minutes to start working.
+To change it: Cloudflare dashboard → **Workers & Pages** → on the right side find **Subdomain** (or **Account details → Subdomain**) → **Change**. Something like `alexandsam` gives `https://kasal-snaps.alexandsam.workers.dev`. It can take a few minutes to start working.
 
-To change the `wedding-photos` part (for example to `alex-and-sam`), keep it out of git:
+To change the `kasal-snaps` part (for example to `alex-and-sam`), keep it out of git:
 
-1. First rename the existing Worker in the dashboard: **Workers & Pages → wedding-photos → Settings → Name → Edit**. Renaming keeps your secrets; a brand-new name from a deploy would start without them.
+1. First rename the existing Worker in the dashboard: **Workers & Pages → kasal-snaps → Settings → Name → Edit**. Renaming keeps your secrets; a brand-new name from a deploy would start without them.
 2. Create a file called `.env` in the project folder (it's ignored by git) containing `WORKER_NAME=alex-and-sam`.
 3. Run `npm run deploy`. From now on use `npm run cf -- secret put NAME` instead of `npx wrangler secret put NAME`, so secrets go to the renamed Worker.
 
@@ -288,7 +288,7 @@ To change the `wedding-photos` part (for example to `alex-and-sam`), keep it out
 
 If you own a domain (for example `alexandsam.com`) and it's managed by Cloudflare:
 
-1. Cloudflare dashboard → **Workers & Pages** → **wedding-photos** → **Settings** → **Domains & Routes** → **Add** → **Custom domain**.
+1. Cloudflare dashboard → **Workers & Pages** → **kasal-snaps** → **Settings** → **Domains & Routes** → **Add** → **Custom domain**.
 2. Type something like `photos.alexandsam.com` and confirm. HTTPS is set up for you automatically.
 
 Optionally put that address in `siteUrl` in `src/config.js` (or `SITE_URL` in `.dev.vars`) so the QR card uses it by default.
@@ -365,7 +365,7 @@ Only after your backups are safe: in `/admin`, **Wedding date → Delete all upl
 ### 4. (Optional) Remove everything
 
 - Delete the bucket: Cloudflare dashboard → **R2** → **wedding-photos** → **Settings** → **Delete bucket** (it must be empty first).
-- Delete the website: **Workers & Pages** → **wedding-photos** → **Settings** → **Delete**.
+- Delete the website: **Workers & Pages** → **kasal-snaps** → **Settings** → **Delete**.
 
 ### Alternative for big collections: rclone
 
@@ -386,7 +386,7 @@ For very large collections (50 GB+), the free tool [rclone](https://rclone.org/s
 | Guests see "Uploads open on …" during the wedding | On the admin page, click **Change date** and check the wedding day, the opening time and your time zone (shown in brackets). Saving there works straight away, with no redeploy. |
 | The date or upload window ignores my `config.js` change | A date saved on the admin page wins. Click **Change date → Go back to the config date**. |
 | My config changes don't show up | Run `npm run deploy`. Option B: re-run `npm run push-secrets`. A value set in the dashboard or `.dev.vars` beats `config.js`. |
-| `*.workers.dev` address doesn't load | New subdomains take a few minutes. Check **Workers & Pages → wedding-photos → Settings → Domains & Routes** that `workers.dev` is enabled. |
+| `*.workers.dev` address doesn't load | New subdomains take a few minutes. Check **Workers & Pages → kasal-snaps → Settings → Domains & Routes** that `workers.dev` is enabled. |
 | An upload keeps failing | Usually weak signal. Tap **Tap to retry** on better Wi-Fi. Files over 5 GB aren't supported. |
 | A photo or video has no thumbnail | The phone couldn't make one (common for some HEVC videos or HEIC photos). The file itself is fine — click it to view or download. |
 | Video won't play in the admin page | Some formats (for example HEVC `.mov` from iPhones) only play in Safari or Edge. Download it and play it on your computer. |
